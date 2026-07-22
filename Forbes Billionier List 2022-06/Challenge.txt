@@ -1,0 +1,35 @@
+Challenge brief
+Forbes World's Billionaires List - Challenge Brief
+Challenge period: June 2022 Dataset: Reconstructed brief based on the shipped data file for the June 2022 DataDNA challenge.
+
+About the data
+The primary data table for this challenge carries the following columns:
+	rank
+	personName
+	age
+	finalWorth
+	year
+	month
+	category
+	source
+	country
+	state
+	city
+	countryOfCitizenship
+	organization
+	selfMade
+	gender
+	birthDate
+	title
+	philanthropyScore
+	residenceMsa
+	numberOfSiblings
+	bio
+	about
+Suggested analytical angles
+	Which industries concentrate the most wealth at the top of the list?
+	How does self-made status correlate with age, country, and final worth?
+	Which countries contribute the most billionaires relative to population?
+	What philanthropy-score patterns emerge across sectors?
+	What great submissions did
+This brief was reconstructed from the dataset contents in 2026 as part of the Playground audit. The original June 2022 challenge brief was not preserved as a separate file in the source archive, so the analytical angles above are inferred from the column list. See the corresponding /challenges/ entry on datadna.onyxdata.co.uk for examples of how participants approached the data.
