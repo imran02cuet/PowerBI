@@ -1,0 +1,47 @@
+587,000 jobs displaced by AI. Only 296,000 created.
+
+
+
+I just wrapped up a Power BI project July 2026 #DataDNAChallenge! digging into that gap — the Global AI Adoption & Workforce Displacement Index.
+
+
+
+A few things that stood out while building it:
+
+
+
+→ Job creation covered ~55% of displacement pre-GenAI. In the GenAI era, that coverage has dropped to ~50% — the gap is widening, not closing.
+
+
+
+→ Food & Beverage, Media & Entertainment, and Healthcare top the list for displacement risk — not the industries most people assume.
+
+
+
+→ The most uncomfortable finding: reskilling spend is nearly the inverse of risk. Manual Skilled Trades carries the highest displacement risk but gets the lowest reskilling investment per displaced job — while lower-risk categories are comparatively over-funded.
+
+
+
+On the technical side, this was a full semantic model build in Power BI — star schema, 80+ DAX measures, weighted risk indices across country/industry/skill dimensions, and dynamic insight-driven titles so every chart states its own takeaway instead of leaving the reader to find it.
+
+
+
+Six pages: Executive Summary, Generative AI Shift, Industry Risk & Preparedness, Skills & Reskilling, Country & Policy Targeting, and Funding Shortfall.
+
+
+
+Happy to share more on the modeling approach if you're working on something similar.
+
+
+
+I would love to hear your feedback and suggestions!
+
+Onyx Data Smart Frames UI Data Career Jumpstart
+
+
+
+Link: 
+
+
+
+#PowerBI #DAX #DataAnalytics #BusinessIntelligence #AI #WorkforceDevelopment #DataModeling

@@ -1,0 +1,36 @@
+📊 Data DNA Challenge Submission June 2026 – UK Fintech Neobank Digital Transaction Health Monitor Analytics 
+
+Excited to share my first ever Power BI dashboard developed for the #DataDNAChallenge!
+
+This dashboard analyzes transaction performance, fraud exposure, operational failures, and revenue leakage across a fintech banking environment. The goal was not only to visualize KPIs but also to uncover actionable business insights.
+
+🔍 Key Insights Identified:
+
+✅ Only 15% of transactions reached a completed status, indicating significant operational inefficiencies.
+
+✅ Premium customers generated 63% of total transaction value while also exhibiting a fraud rate 2x higher than the portfolio average.
+
+✅ London contributed 61.61% of total transaction value but showed a 60% fraud rate, highlighting a critical concentration risk.
+
+✅ International transactions experienced 75% fee leakage compared to expected revenue.
+
+✅ Business segment transactions showed a 100% failure rate, requiring immediate investigation.
+
+✅ Fraud risk scoring appears misaligned, with some low-risk categories exhibiting higher fraud rates than high-risk categories.
+
+📈 Dashboard Features:
+• Executive KPI monitoring
+• Fraud & failure trend analysis
+• Customer segment performance
+• Geographic risk assessment
+• Revenue leakage detection
+• Automated insight generation using DAX
+
+This project challenged me to transform raw transaction data into meaningful business intelligence and decision-ready insights.
+
+I would love to hear your feedback and suggestions!
+Onyx Data Smart Frames UI Data Career Jumpstart
+
+Link: https://lnkd.in/gnT6_QkW
+
+#dataDNA #PowerBI #DataVisualization #BusinessIntelligence #DataAnalytics #Fintech #DashboardDesign #DAX #DataStorytelling #DataDNAChallenge #MicrosoftPowerBI
