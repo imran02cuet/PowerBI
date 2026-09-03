@@ -1,0 +1,15 @@
+Operational & Analytical Challenges
+Urban food-delivery operations face growing pressure to balance delivery speed, customer experience, traffic conditions, and order profitability, and this dataset highlights several critical operational and analytical challenges:
+
+Fragmented visibility across orders, kitchens, delivery zones, traffic conditions, weather, and customer outcomes makes it difficult to understand overall delivery performance and operational efficiency.
+Delivery performance varies significantly by time of day, with rush-hour orders to outer-ring zones experiencing severe delays and SLA breaches, making peak-period capacity and routing difficult to manage.
+Weather conditions can materially increase traffic friction and delivery times, making it challenging to predict and manage service disruptions during Rain and Heavy Rain periods.
+Long-distance deliveries create structural profitability pressure, with orders exceeding 8 km generating negative profitability as delivery costs increase faster than order revenue.
+Food quality deteriorates as delivery times increase, with longer deliveries associated with lower food temperatures and significantly poorer customer ratings.
+Profitability varies considerably across delivery corridors and zones, making it difficult to identify which kitchen-to-zone combinations consistently create financial losses.
+Traffic congestion across major urban routes can compound both delivery delays and delivery costs, creating operational inefficiencies that are difficult to isolate without corridor-level analysis.
+High order volumes do not always translate into healthy business performance, as delays, excessive delivery costs, SLA breaches, and poor customer experiences can erode order profitability.
+Limited visibility into the relationship between delivery distance, traffic friction, weather, delivery time, food temperature, and customer ratings weakens operational and service-level decision-making.
+Cross-dimensional interactions (e.g., kitchen × zone × time period × weather × traffic conditions) are complex and often under-analysed, hiding high-risk delivery corridors and optimisation opportunities.
+Seasonal, daily, and rush-hour variations in delivery demand and traffic conditions create uneven operational performance that is difficult to manage without structured temporal analysis.
+Difficulty connecting delivery performance to order profitability, customer satisfaction, and operational costs limits strategic decisions around pricing, routing, kitchen allocation, delivery zones, and SLA management.
