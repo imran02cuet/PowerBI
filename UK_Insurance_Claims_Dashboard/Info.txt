@@ -1,0 +1,36 @@
+🚀 Databuzz Power BI Contest – September 2026
+📊 UK Insurance Analysis Challenge
+This September, take on a real-world business scenario and transform insurance data into actionable insights!
+
+🏢 Business Scenario
+Assume our organization wants to start an insurance company in the UK, and your analysis is expected to help us make informed business decisions.
+Your dashboard should help the organization understand the UK insurance market, insurance types, claims, customer behavior, risks, trends, and potential business opportunities.
+
+🔍 Your Challenge
+Analyze all major UK insurance types and claims to uncover insights that could support the launch and growth of a new insurance business.
+🛡️ Insurance Areas Include
+🚗 Motor Insurance
+❤️ Health Insurance
+👨‍👩‍👧 Life Insurance
+🏠 Home Insurance
+✈️ Travel Insurance
+💼 Business Insurance
+
+💡 Key Questions Your Analysis Could Answer
+* Which insurance types show the strongest opportunities?
+* What are the major claim trends and patterns?
+* Which customer segments present the greatest potential?
+* Where are the highest risks and claim costs?
+* What factors influence claim frequency and severity?
+* Which areas should a new insurer focus on?
+* What actionable recommendations can you provide to leadership?
+
+🏆 Winner Prize: $100 USD
+📜 Participation Certificate for Every Participant
+
+🎯 What Can You Showcase?
+* Data storytelling
+* Meaningful business insights that can support business decisions
+* Business insights and recommendations
+* Interactive dashboard design
+🔥 The goal is not just to build a dashboard — it's to use data to help launch an insurance business in the UK.
