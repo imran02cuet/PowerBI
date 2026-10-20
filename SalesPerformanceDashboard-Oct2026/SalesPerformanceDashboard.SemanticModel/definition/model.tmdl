@@ -1,0 +1,26 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
+
+annotation PBI_QueryOrder = ["Sales2020","Territory","Returns","ProductSubcategory","ProductCategory","Product","Calendar","Sales2022","Sales2021","Customer"]
+
+ref table FactSales
+ref table FactReturns
+ref table DimDate
+ref table DimProduct
+ref table DimCustomer
+ref table DimTerritory
+ref table _Measures
+ref table 'Metric Selector'
+
+ref cultureInfo en-US
+

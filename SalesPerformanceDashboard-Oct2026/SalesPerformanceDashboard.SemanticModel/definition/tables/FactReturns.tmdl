@@ -1,0 +1,57 @@
+/// FACT. Grain: one row per return record (return date, product, territory) with the quantity returned (1,809 rows). Relationships: DimDate (ReturnDate), DimProduct, DimTerritory. Product keys that do not exist in the Product lookup are mapped to the Unknown member (ProductKey = -1) in Power Query. Returns have no link to a specific sales order or customer.
+table FactReturns
+	lineageTag: b5c0a706-4e40-47ce-8701-fd87126656c8
+
+	/// Date the items were returned. Source text dd-MM-yyyy parsed as en-GB. Active relationship to DimDate[Date].
+	column ReturnDate
+		dataType: dateTime
+		formatString: dd-MMM-yyyy
+		lineageTag: dbf2403a-a749-4340-946b-ab3aeac08534
+		summarizeBy: none
+		sourceColumn: ReturnDate
+
+	/// Foreign key to DimTerritory[TerritoryKey]. Hidden; use DimTerritory attributes in visuals.
+	column TerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 692fdf91-ce28-44ba-890c-1a1d173333cc
+		summarizeBy: none
+		sourceColumn: TerritoryKey
+
+	/// Foreign key to DimProduct[ProductKey]. Hidden. Value -1 means the product was not found in the Product lookup (reported as 'Unknown').
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 74e6ee56-49e2-4295-8a1f-2e6e59c95013
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	/// Number of units returned. Additive (default aggregation: Sum).
+	column ReturnQuantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: ea1a8d07-3587-42b5-8f29-a38f227ac920
+		summarizeBy: sum
+		sourceColumn: ReturnQuantity
+
+	partition FactReturns = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/009%20Returns%20Data.csv"), [Delimiter=",", Columns=4, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    TypedDate = Table.TransformColumnTypes(Promoted, {{"ReturnDate", type date}}, "en-GB"),
+				    Typed = Table.TransformColumnTypes(TypedDate, {{"TerritoryKey", Int64.Type}, {"ProductKey", Int64.Type}, {"ReturnQuantity", Int64.Type}}, "en-US"),
+				    ProductLookup = Table.PromoteHeaders(Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/006%20Product%20Lookup.csv"), [Delimiter=",", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]), [PromoteAllScalars=true]),
+				    ValidKeys = Table.Distinct(Table.TransformColumnTypes(Table.SelectColumns(ProductLookup, {"ProductKey"}), {{"ProductKey", Int64.Type}}, "en-US")),
+				    Joined = Table.NestedJoin(Typed, {"ProductKey"}, ValidKeys, {"ProductKey"}, "Match", JoinKind.LeftOuter),
+				    Fixed = Table.AddColumn(Joined, "ProductKeyFixed", each if Table.IsEmpty([Match]) then -1 else [ProductKey], Int64.Type),
+				    Dropped = Table.RemoveColumns(Fixed, {"ProductKey", "Match"}),
+				    Renamed = Table.RenameColumns(Dropped, {{"ProductKeyFixed", "ProductKey"}}),
+				    Ordered = Table.ReorderColumns(Renamed, {"ReturnDate", "TerritoryKey", "ProductKey", "ReturnQuantity"}),
+				    Clean = Table.SelectRows(Ordered, each [ReturnDate] <> null)
+				in
+				    Clean
+

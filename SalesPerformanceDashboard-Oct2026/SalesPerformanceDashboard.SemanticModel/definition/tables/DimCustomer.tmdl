@@ -1,0 +1,144 @@
+/// DIMENSION (customer). One row per customer (18,148 rows, unique CustomerKey). Blank-key rows and duplicate keys from the source file were removed in Power Query; FullName and the Income Band / Income Band Order tier columns were derived there too. Filters FactSales via CustomerKey. Contains personal data (names, email, birth date, income); apply appropriate access controls before sharing.
+table DimCustomer
+	lineageTag: 04075129-ce4c-4ad1-9bef-e141cdc52876
+
+	/// Primary key of the customer. Hidden; use customer attributes in visuals.
+	column CustomerKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: b4fdb066-f544-4bb4-a6ae-904f7c081dd2
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	/// Title/prefix of the customer as given in the source: MR., MS., MRS., or blank where not provided.
+	column Prefix
+		dataType: string
+		lineageTag: 3792f24a-2902-47cc-b43f-461cb21764b1
+		summarizeBy: none
+		sourceColumn: Prefix
+
+	/// Customer first name. Personal data.
+	column FirstName
+		dataType: string
+		lineageTag: 5d59f2ce-966e-4c5a-afe1-19964d3a4e9b
+		summarizeBy: none
+		sourceColumn: FirstName
+
+	/// Customer last name. Personal data.
+	column LastName
+		dataType: string
+		lineageTag: 3c3436c5-8099-48e7-bdef-502bb3bdbadc
+		summarizeBy: none
+		sourceColumn: LastName
+
+	/// Derived in Power Query: FirstName and LastName joined with a space. Personal data.
+	column FullName
+		dataType: string
+		lineageTag: 29949527-2a9d-4a38-b721-6bd0ebec122e
+		summarizeBy: none
+		sourceColumn: FullName
+
+	/// Customer date of birth. Source range 1910-1980; use it to derive age bands in measures or calculated columns if needed.
+	column BirthDate
+		dataType: dateTime
+		formatString: dd-MMM-yyyy
+		lineageTag: f12e9755-ea94-4df2-aedc-06ff6effe3e5
+		summarizeBy: none
+		sourceColumn: BirthDate
+
+	/// Marital status code from the source (M = married, S = single).
+	column MaritalStatus
+		dataType: string
+		lineageTag: 6599e713-b22a-4676-8fa5-24303bc2f773
+		summarizeBy: none
+		sourceColumn: MaritalStatus
+
+	/// Gender code from the source: M, F, or NA where not provided.
+	column Gender
+		dataType: string
+		lineageTag: c93c9574-0cf7-4bf8-ba84-7e6ac7deb555
+		summarizeBy: none
+		sourceColumn: Gender
+
+	/// Customer email address. Personal data; consider hiding or restricting before sharing the report.
+	column EmailAddress
+		dataType: string
+		lineageTag: 5c3a864e-6c48-409c-ae9c-5dde7de3c4ba
+		summarizeBy: none
+		sourceColumn: EmailAddress
+
+	/// Customer annual income as recorded in the source (whole number). Customer attribute, not additive across sales rows; use AVERAGE or a distinct-customer measure instead of SUM.
+	column AnnualIncome
+		dataType: int64
+		formatString: #,0
+		lineageTag: 3bd32c56-684f-4873-b4f8-6aee1b578e12
+		summarizeBy: none
+		sourceColumn: AnnualIncome
+
+	/// Number of children of the customer.
+	column TotalChildren
+		dataType: int64
+		formatString: 0
+		lineageTag: 74a17956-4665-4dc4-ab34-5e5229d17676
+		summarizeBy: none
+		sourceColumn: TotalChildren
+
+	/// Highest education level of the customer as given in the source.
+	column EducationLevel
+		dataType: string
+		lineageTag: dbf51c5c-7278-4b90-982f-0015b36c2926
+		summarizeBy: none
+		sourceColumn: EducationLevel
+
+	/// Occupation category of the customer as given in the source.
+	column Occupation
+		dataType: string
+		lineageTag: a195b2ee-7ff3-49b1-87bd-da5fb4f6df25
+		summarizeBy: none
+		sourceColumn: Occupation
+
+	/// Home ownership flag from the source (Y = owns a home, N = does not).
+	column HomeOwner
+		dataType: string
+		lineageTag: ed62faac-559c-4baf-90a3-355d36b14ba6
+		summarizeBy: none
+		sourceColumn: HomeOwner
+
+	/// Sort order (1-5) for Income Band. Hidden helper column.
+	column 'Income Band Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 35acb31e-da11-46dc-a3b1-35dd5a2aa4a8
+		summarizeBy: none
+		sourceColumn: Income Band Order
+
+	/// Customer income tier derived in Power Query from AnnualIncome: Under $40K, $40K-$60K, $60K-$80K, $80K-$100K, $100K+ (lower bound inclusive). Sorted by Income Band Order. Used as the customer segment for tier analysis.
+	column 'Income Band'
+		dataType: string
+		lineageTag: 68355a00-a27f-417b-ab5d-1523d17aa03e
+		summarizeBy: none
+		sourceColumn: Income Band
+		sortByColumn: 'Income Band Order'
+
+	partition DimCustomer = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/004%20Customer%20Lookup.csv"), [Delimiter=",", Columns=13, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    TextTyped = Table.TransformColumnTypes(Promoted, {{"Prefix", type text}, {"FirstName", type text}, {"LastName", type text}, {"MaritalStatus", type text}, {"Gender", type text}, {"EmailAddress", type text}, {"EducationLevel", type text}, {"Occupation", type text}, {"HomeOwner", type text}}),
+				    ToNum = (v as any) as nullable number => try Number.From(Text.Replace(Text.Replace(Text.Replace(Text.Trim(Text.From(v)), "$", ""), ",", ""), " ", ""), "en-US") otherwise null,
+				    Nums = Table.TransformColumns(TextTyped, {{"CustomerKey", ToNum, Int64.Type}, {"AnnualIncome", ToNum, Int64.Type}, {"TotalChildren", ToNum, Int64.Type}}),
+				    Dates = Table.TransformColumns(Nums, {{"BirthDate", each try Date.From(DateTime.From(_, "en-US")) otherwise null, type date}}),
+				    NoBlankKey = Table.SelectRows(Dates, each [CustomerKey] <> null),
+				    Deduped = Table.Distinct(NoBlankKey, {"CustomerKey"}),
+				    AddFullName = Table.AddColumn(Deduped, "FullName", each Text.Trim(Text.Combine({[FirstName], [LastName]}, " ")), type text),
+				    AddBandOrder = Table.AddColumn(AddFullName, "Income Band Order", each if [AnnualIncome] = null then null else if [AnnualIncome] < 40000 then 1 else if [AnnualIncome] < 60000 then 2 else if [AnnualIncome] < 80000 then 3 else if [AnnualIncome] < 100000 then 4 else 5, Int64.Type),
+				    AddBand = Table.AddColumn(AddBandOrder, "Income Band", each if [Income Band Order] = null then "Unknown" else {"Under $40K", "$40K-$60K", "$60K-$80K", "$80K-$100K", "$100K+"}{[Income Band Order] - 1}, type text),
+				    Reordered = Table.ReorderColumns(AddBand, {"CustomerKey", "Prefix", "FirstName", "LastName", "FullName", "BirthDate", "MaritalStatus", "Gender", "EmailAddress", "AnnualIncome", "Income Band", "Income Band Order", "TotalChildren", "EducationLevel", "Occupation", "HomeOwner"})
+				in
+				    Reordered
+

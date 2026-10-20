@@ -1,0 +1,1227 @@
+/// Measure container (no data). Holds every report measure, organised in display folders and sub-folders: 01 Base, 02 KPI, 03 Time Intelligence, 04 Analysis, 05 Dynamic Text, 06 Conditional Formatting.
+table _Measures
+	lineageTag: b7707c68-0f51-4be1-9af6-72433b34ad19
+
+	/// Total sales revenue = units ordered x product list price (price from DimProduct). Source data has no revenue column, so this is derived.
+	measure Revenue =
+			// Revenue = units ordered x product list price (the source has no revenue column)
+			// Row-level calculation, so it stays correct at any grain, subtotal or grand total
+			VAR _Revenue =
+			    SUMX ( FactSales, FactSales[OrderQuantity] * RELATED ( DimProduct[ProductPrice] ) )
+			RETURN
+			    _Revenue
+		formatString: $#,0
+		displayFolder: 01 Base\Sales
+		lineageTag: f1390473-2b66-48df-9a09-257ae864811a
+
+	/// Total product cost = units ordered x product unit cost (from DimProduct).
+	measure Cost =
+			// Cost = units ordered x product unit cost (from DimProduct)
+			// Row-level calculation, so it stays correct at any grain, subtotal or grand total
+			VAR _Cost =
+			    SUMX ( FactSales, FactSales[OrderQuantity] * RELATED ( DimProduct[ProductCost] ) )
+			RETURN
+			    _Cost
+		formatString: $#,0
+		displayFolder: 01 Base\Sales
+		lineageTag: e5ce54c9-5bf4-415d-b07b-e39f79e9d09c
+
+	/// Revenue minus product cost. Gross profit only: the data has no operating expenses, shipping or discounts, so net profit cannot be calculated.
+	measure 'Gross Profit' =
+			// Gross profit = revenue - product cost
+			// Net profit cannot be calculated: no operating expense, shipping or discount data exists
+			VAR _Revenue = [Revenue]
+			VAR _Cost = [Cost]
+			VAR _GrossProfit = _Revenue - _Cost
+			RETURN
+			    _GrossProfit
+		formatString: $#,0
+		displayFolder: 01 Base\Sales
+		lineageTag: 87109efc-7524-40a9-bb43-b3a9b668adb4
+
+	/// Total units ordered.
+	measure 'Units Sold' =
+			// Total units ordered across all order lines in the current filter context
+			VAR _UnitsSold =
+			    SUM ( FactSales[OrderQuantity] )
+			RETURN
+			    _UnitsSold
+		formatString: #,0
+		displayFolder: 01 Base\Sales
+		lineageTag: 71974ab5-7de9-4db7-8051-f37f8e415fae
+
+	/// Number of distinct orders (OrderNumber).
+	measure Orders =
+			// Distinct count of order numbers (one order can have several lines)
+			VAR _Orders =
+			    DISTINCTCOUNT ( FactSales[OrderNumber] )
+			RETURN
+			    _Orders
+		formatString: #,0
+		displayFolder: 01 Base\Sales
+		lineageTag: 1f8e8f54-8477-45df-a3c2-0228f1e976f5
+
+	/// Number of distinct customers who placed at least one order in the selected period.
+	measure Customers =
+			// Active customers = distinct customers who ordered in the current period
+			VAR _Customers =
+			    DISTINCTCOUNT ( FactSales[CustomerKey] )
+			RETURN
+			    _Customers
+		formatString: #,0
+		displayFolder: 01 Base\Sales
+		lineageTag: 0412a1e3-0f80-4ffa-9bda-43e454039577
+
+	/// Total units returned (by return date). Filters by date, product and territory only; returns have no customer link.
+	measure 'Units Returned' =
+			// Total units returned, by return date
+			// FactReturns links to Date, Product and Territory only (no customer or order link)
+			VAR _UnitsReturned =
+			    SUM ( FactReturns[ReturnQuantity] )
+			RETURN
+			    _UnitsReturned
+		formatString: #,0
+		displayFolder: 01 Base\Returns
+		lineageTag: a7c6e17e-998b-4d2d-a717-a6bd80a08d62
+
+	/// Gross Profit / Revenue.
+	measure 'Gross Margin %' =
+			// Gross margin % = gross profit / revenue
+			// DIVIDE returns blank instead of an error when revenue is zero or blank
+			VAR _GrossProfit = [Gross Profit]
+			VAR _Revenue = [Revenue]
+			VAR _GrossMargin = DIVIDE ( _GrossProfit, _Revenue )
+			RETURN
+			    _GrossMargin
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 65fcd2b6-7904-4105-9801-4049c752cd60
+
+	/// Units returned / units sold in the same filter context (returns by return date, sales by order date). Works by date, product and territory.
+	measure 'Return Rate %' =
+			// Return rate % = units returned / units sold in the same date, product and territory context
+			// Returns are counted by return date, sales by order date
+			VAR _UnitsReturned = [Units Returned]
+			VAR _UnitsSold = [Units Sold]
+			VAR _ReturnRate = DIVIDE ( _UnitsReturned, _UnitsSold )
+			RETURN
+			    _ReturnRate
+		formatString: 0.0%
+		displayFolder: 02 KPI\Quality
+		lineageTag: 40bafb0b-de7c-472e-8c2d-1d8b6c56f3a3
+
+	/// Revenue per order. Used to monitor order-size outliers.
+	measure 'Average Order Value' =
+			// Average order value = revenue / orders (used to spot order-size outliers)
+			VAR _Revenue = [Revenue]
+			VAR _Orders = [Orders]
+			VAR _AOV = DIVIDE ( _Revenue, _Orders )
+			RETURN
+			    _AOV
+		formatString: $#,0
+		displayFolder: 02 KPI\Quality
+		lineageTag: d4ce1a7d-00ca-4cb4-885c-5f45d7ee210d
+
+	/// Revenue divided by active customers in the selected period.
+	measure 'Revenue per Customer' =
+			// Revenue per customer = revenue / active customers in the period
+			VAR _Revenue = [Revenue]
+			VAR _Customers = [Customers]
+			VAR _RevenuePerCustomer = DIVIDE ( _Revenue, _Customers )
+			RETURN
+			    _RevenuePerCustomer
+		formatString: $#,0
+		displayFolder: 02 KPI\Customers
+		lineageTag: d1f754e7-de9b-4816-9f41-7ca507646303
+
+	/// Orders divided by active customers in the selected period.
+	measure 'Orders per Customer' =
+			// Orders per customer = orders / active customers in the period (purchase frequency)
+			VAR _Orders = [Orders]
+			VAR _Customers = [Customers]
+			VAR _OrdersPerCustomer = DIVIDE ( _Orders, _Customers )
+			RETURN
+			    _OrdersPerCustomer
+		formatString: 0.00
+		displayFolder: 02 KPI\Customers
+		lineageTag: 54912629-2d7f-435d-a4a9-6775a817fd3e
+
+	/// Share of active customers with 2 or more orders inside the selected period (repeat within the period, not lifetime). Returns 0% rather than blank when nobody repeated.
+	measure 'Repeat Customer %' =
+			// Share of active customers with 2 or more orders inside the selected period
+			// Repeat within the period, not lifetime
+			// 1. Orders per customer in the current filter context
+			VAR _CustomerOrders =
+			    ADDCOLUMNS (
+			        VALUES ( FactSales[CustomerKey] ),
+			        "@Orders", CALCULATE ( DISTINCTCOUNT ( FactSales[OrderNumber] ) )
+			    )
+			// 2. Customers with at least 2 orders (+ 0 returns 0 instead of blank when nobody repeated)
+			VAR _RepeatCustomers = COUNTROWS ( FILTER ( _CustomerOrders, [@Orders] >= 2 ) ) + 0
+			VAR _ActiveCustomers = COUNTROWS ( _CustomerOrders )
+			VAR _RepeatRate = DIVIDE ( _RepeatCustomers, _ActiveCustomers )
+			RETURN
+			    _RepeatRate
+		formatString: 0.0%
+		displayFolder: 02 KPI\Customers
+		lineageTag: 8ccad84f-7c0e-463b-ac46-1de075bf4d1c
+
+	/// Latest order date in the data, ignoring all filters. Anchor for like-for-like prior-year comparison because the latest year is incomplete.
+	measure 'Last Sales Date' =
+			// Latest order date in the data, ignoring every filter
+			// Anchors like-for-like comparison because the latest year is incomplete
+			VAR _LastDate =
+			    CALCULATE ( MAX ( FactSales[OrderDate] ), REMOVEFILTERS () )
+			RETURN
+			    _LastDate
+		formatString: dd-MMM-yyyy
+		displayFolder: 03 Time Intelligence\Period
+		lineageTag: 18712d6b-acf3-4e47-bdd0-f49b4eeedca6
+
+	/// Revenue for the same period last year, capped at the equivalent of the last sales date so a partial current year is compared like-for-like. Blank unless exactly one year is in context.
+	measure 'Revenue PY' =
+			// Revenue for the same period last year, like-for-like
+			// 1. Cut-off = last sales date minus 12 months (2022 data ends 30-Jun, so only Jan-Jun 2021 is compared)
+			VAR _Cutoff = EDATE ( [Last Sales Date], -12 )
+			// 2. Only valid when exactly one year is in context; otherwise blank
+			VAR _OneYear = HASONEVALUE ( DimDate[Year] )
+			VAR _RevenuePY =
+			    IF (
+			        _OneYear,
+			        CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( DimDate[Date] ), DimDate[Date] <= _Cutoff )
+			    )
+			RETURN
+			    _RevenuePY
+		formatString: $#,0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 5a48da46-d97e-4d6c-96b1-faa43f5167f8
+
+	/// Gross profit for the same period last year (like-for-like, see Revenue PY).
+	measure 'Gross Profit PY' =
+			// Gross profit for the same period last year, like-for-like (see Revenue PY)
+			// 1. Cut-off = last sales date minus 12 months
+			VAR _Cutoff = EDATE ( [Last Sales Date], -12 )
+			// 2. Only valid when exactly one year is in context; otherwise blank
+			VAR _OneYear = HASONEVALUE ( DimDate[Year] )
+			VAR _GrossProfitPY =
+			    IF (
+			        _OneYear,
+			        CALCULATE ( [Gross Profit], SAMEPERIODLASTYEAR ( DimDate[Date] ), DimDate[Date] <= _Cutoff )
+			    )
+			RETURN
+			    _GrossProfitPY
+		formatString: $#,0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 381f34ff-7453-4249-9c4e-96f52b8637fe
+
+	/// Gross margin % for the same period last year.
+	measure 'Gross Margin % PY' =
+			// Gross margin % for the same period last year = gross profit PY / revenue PY
+			VAR _GrossProfitPY = [Gross Profit PY]
+			VAR _RevenuePY = [Revenue PY]
+			VAR _GrossMarginPY = DIVIDE ( _GrossProfitPY, _RevenuePY )
+			RETURN
+			    _GrossMarginPY
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 62deffe3-fc7c-4634-925d-e20cda6504d2
+
+	/// Return rate for the same period last year (like-for-like).
+	measure 'Return Rate % PY' =
+			// Return rate for the same period last year, like-for-like (see Revenue PY)
+			// 1. Cut-off = last sales date minus 12 months
+			VAR _Cutoff = EDATE ( [Last Sales Date], -12 )
+			// 2. Only valid when exactly one year is in context; otherwise blank
+			VAR _OneYear = HASONEVALUE ( DimDate[Year] )
+			VAR _ReturnRatePY =
+			    IF (
+			        _OneYear,
+			        CALCULATE ( [Return Rate %], SAMEPERIODLASTYEAR ( DimDate[Date] ), DimDate[Date] <= _Cutoff )
+			    )
+			RETURN
+			    _ReturnRatePY
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 43d5e86e-8bf1-47ef-ab02-bda908021369
+
+	/// Active customers in the same period last year (like-for-like).
+	measure 'Customers PY' =
+			// Active customers in the same period last year, like-for-like (see Revenue PY)
+			// 1. Cut-off = last sales date minus 12 months
+			VAR _Cutoff = EDATE ( [Last Sales Date], -12 )
+			// 2. Only valid when exactly one year is in context; otherwise blank
+			VAR _OneYear = HASONEVALUE ( DimDate[Year] )
+			VAR _CustomersPY =
+			    IF (
+			        _OneYear,
+			        CALCULATE ( [Customers], SAMEPERIODLASTYEAR ( DimDate[Date] ), DimDate[Date] <= _Cutoff )
+			    )
+			RETURN
+			    _CustomersPY
+		formatString: #,0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 5226a32b-a3a4-43ae-ab2c-e62c0bc5f03f
+
+	/// Revenue per customer in the same period last year.
+	measure 'Revenue per Customer PY' =
+			// Revenue per customer in the same period last year = revenue PY / customers PY
+			VAR _RevenuePY = [Revenue PY]
+			VAR _CustomersPY = [Customers PY]
+			VAR _RevenuePerCustomerPY = DIVIDE ( _RevenuePY, _CustomersPY )
+			RETURN
+			    _RevenuePerCustomerPY
+		formatString: $#,0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: aa4cce78-309b-4367-9ab4-f0b164164fcd
+
+	/// Repeat customer % in the same period last year (like-for-like).
+	measure 'Repeat Customer % PY' =
+			// Repeat customer % in the same period last year, like-for-like (see Revenue PY)
+			// 1. Cut-off = last sales date minus 12 months
+			VAR _Cutoff = EDATE ( [Last Sales Date], -12 )
+			// 2. Only valid when exactly one year is in context; otherwise blank
+			VAR _OneYear = HASONEVALUE ( DimDate[Year] )
+			VAR _RepeatRatePY =
+			    IF (
+			        _OneYear,
+			        CALCULATE ( [Repeat Customer %], SAMEPERIODLASTYEAR ( DimDate[Date] ), DimDate[Date] <= _Cutoff )
+			    )
+			RETURN
+			    _RepeatRatePY
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: e8325598-0cdc-410c-a9b9-80b1e88be4e3
+
+	/// Revenue growth versus the same period last year. Blank when no comparable prior year.
+	measure 'Revenue YoY %' =
+			// Revenue growth vs the same period last year (blank when no comparable prior year)
+			VAR _Revenue = [Revenue]
+			VAR _RevenuePY = [Revenue PY]
+			VAR _YoY = DIVIDE ( _Revenue - _RevenuePY, _RevenuePY )
+			RETURN
+			    _YoY
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 03 Time Intelligence\YoY
+		lineageTag: 82035257-822c-4b18-a12d-12433ffb285d
+
+	/// Revenue growth versus the previous month. Meaningful when a single month is in context (e.g. month axis).
+	measure 'Revenue MoM %' =
+			// Revenue growth vs the previous month
+			// Meaningful only when a single month is in context (e.g. a month axis)
+			VAR _Revenue = [Revenue]
+			VAR _PreviousMonth = CALCULATE ( [Revenue], DATEADD ( DimDate[Date], -1, MONTH ) )
+			VAR _MoM = DIVIDE ( _Revenue - _PreviousMonth, _PreviousMonth )
+			RETURN
+			    _MoM
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 03 Time Intelligence\MoM
+		lineageTag: 404f710f-f037-4fd3-b52b-0053ac0e65ca
+
+	/// Share of total revenue within the current selection (all slicers kept, visual categories removed). Used for contribution views.
+	measure 'Revenue Share %' =
+			// Share of total revenue in the current selection
+			// ALLSELECTED() keeps slicers but removes the visual's own rows and columns
+			VAR _Revenue = [Revenue]
+			VAR _TotalSelected = CALCULATE ( [Revenue], ALLSELECTED () )
+			VAR _Share = DIVIDE ( _Revenue, _TotalSelected )
+			RETURN
+			    _Share
+		formatString: 0.0%
+		displayFolder: 04 Analysis\Contribution
+		lineageTag: 48cdb184-9494-4c98-9386-9686744da82a
+
+	/// Font/bar colour by revenue YoY: green = growth, red = decline, grey = no comparable prior year. Use as 'Field value' conditional formatting.
+	measure 'CF - Growth' =
+			// Font / bar colour by revenue YoY: green = growth, red = decline, grey = no comparable prior year
+			VAR _YoY = [Revenue YoY %]
+			VAR _Color =
+			    IF (
+			        ISBLANK ( _YoY ), "#9CA3AF",
+			        IF ( _YoY >= 0, "#2E7D32", "#C62828" )
+			    )
+			RETURN
+			    _Color
+		displayFolder: 06 Conditional Formatting\Font & Bar Colors
+		lineageTag: 1f80aad7-9c64-4dc7-917b-bc146212af4c
+
+	/// Font/bar colour for gross margin %: green = at or above the overall margin of the current selection, amber = within 5 pts below, red = more than 5 pts below.
+	measure 'CF - Margin vs Overall' =
+			// Font / bar colour for gross margin %
+			// green = at or above overall margin, amber = within 5 pts below, red = more than 5 pts below
+			VAR _Margin = [Gross Margin %]
+			VAR _Overall = CALCULATE ( [Gross Margin %], ALLSELECTED () )
+			VAR _Color =
+			    IF (
+			        ISBLANK ( _Margin ), "#9CA3AF",
+			        IF ( _Margin >= _Overall, "#2E7D32",
+			            IF ( _Margin >= _Overall - 0.05, "#F9A825", "#C62828" )
+			        )
+			    )
+			RETURN
+			    _Color
+		displayFolder: 06 Conditional Formatting\Font & Bar Colors
+		lineageTag: e6c593a5-0a29-4d12-a169-0b857e0b367c
+
+	/// Font/bar colour for return rate (lower is better): red = more than 1.5x the overall rate (outlier), amber = above overall, green = at or below overall.
+	measure 'CF - Return Rate vs Overall' =
+			// Font / bar colour for return rate (lower is better)
+			// red = more than 1.5x overall (outlier), amber = above overall, green = at or below overall
+			VAR _Rate = [Return Rate %]
+			VAR _Overall = CALCULATE ( [Return Rate %], ALLSELECTED () )
+			VAR _Color =
+			    IF (
+			        ISBLANK ( _Rate ), "#9CA3AF",
+			        IF ( _Rate > _Overall * 1.5, "#C62828",
+			            IF ( _Rate > _Overall, "#F9A825", "#2E7D32" )
+			        )
+			    )
+			RETURN
+			    _Color
+		displayFolder: 06 Conditional Formatting\Font & Bar Colors
+		lineageTag: fa6f6367-5642-43a4-9bff-b863bb6e8d06
+
+	/// Cell background tint by revenue YoY: light green = growth, light red = decline, light grey = no comparable prior year.
+	measure 'BF - Growth' =
+			// Cell background tint by revenue YoY: light green = growth, light red = decline, light grey = no comparable prior year
+			VAR _YoY = [Revenue YoY %]
+			VAR _Color =
+			    IF (
+			        ISBLANK ( _YoY ), "#F3F4F6",
+			        IF ( _YoY >= 0, "#E8F5E9", "#FFEBEE" )
+			    )
+			RETURN
+			    _Color
+		displayFolder: 06 Conditional Formatting\Background
+		lineageTag: 4b981c69-47ec-4f0b-b6aa-bd3695f9da67
+
+	/// Cell background tint for gross margin %: green = at or above overall, amber = within 5 pts below, red = more than 5 pts below.
+	measure 'BF - Margin vs Overall' =
+			// Cell background tint for gross margin %
+			// light green = at or above overall, light amber = within 5 pts below, light red = more than 5 pts below
+			VAR _Margin = [Gross Margin %]
+			VAR _Overall = CALCULATE ( [Gross Margin %], ALLSELECTED () )
+			VAR _Color =
+			    IF (
+			        ISBLANK ( _Margin ), "#F3F4F6",
+			        IF ( _Margin >= _Overall, "#E8F5E9",
+			            IF ( _Margin >= _Overall - 0.05, "#FFF8E1", "#FFEBEE" )
+			        )
+			    )
+			RETURN
+			    _Color
+		displayFolder: 06 Conditional Formatting\Background
+		lineageTag: 9482f40b-2ff3-4b9a-90cf-1471b0bedde6
+
+	/// Cell background tint for return rate (lower is better): light red = more than 1.5x overall, amber = above overall, light green = at or below overall.
+	measure 'BF - Return Rate vs Overall' =
+			// Cell background tint for return rate (lower is better)
+			// light red = more than 1.5x overall, light amber = above overall, light green = at or below overall
+			VAR _Rate = [Return Rate %]
+			VAR _Overall = CALCULATE ( [Return Rate %], ALLSELECTED () )
+			VAR _Color =
+			    IF (
+			        ISBLANK ( _Rate ), "#F3F4F6",
+			        IF ( _Rate > _Overall * 1.5, "#FFEBEE",
+			            IF ( _Rate > _Overall, "#FFF8E1", "#E8F5E9" )
+			        )
+			    )
+			RETURN
+			    _Color
+		displayFolder: 06 Conditional Formatting\Background
+		lineageTag: 9ead5cf9-8ae4-44dd-83c9-7c6c6b657a9f
+
+	/// Period text for titles. '2022 YTD (Jan-Jun)' when the single selected year is incomplete, the year when complete, 'All years' otherwise.
+	measure 'Label - Period' =
+			// Period text for titles: '2022 YTD (Jan-Jun)' when the single selected year is incomplete, the year when complete, 'All years' otherwise
+			VAR _Year = SELECTEDVALUE ( DimDate[Year] )
+			VAR _LastDate = [Last Sales Date]
+			// A year is incomplete when it is the last data year and the data stops before December
+			VAR _IsPartialYear = _Year = YEAR ( _LastDate ) && MONTH ( _LastDate ) < 12
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _Year ), "All years",
+			        IF (
+			            _IsPartialYear,
+			            _Year & " YTD (Jan-" & FORMAT ( _LastDate, "mmm" ) & ")",
+			            FORMAT ( _Year, "0" )
+			        )
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Labels
+		lineageTag: 5c1e349b-d9fa-44c3-be51-6a6a68b40082
+
+	/// Comparison basis text, e.g. 'vs Jan-Jun 2021' for a partial year or 'vs 2020' for a full year.
+	measure 'Label - Comparison' =
+			// Comparison basis text, e.g. 'vs Jan-Jun 2021' for a partial year or 'vs 2020' for a full year
+			VAR _Year = SELECTEDVALUE ( DimDate[Year] )
+			VAR _LastDate = [Last Sales Date]
+			VAR _IsPartialYear = _Year = YEAR ( _LastDate ) && MONTH ( _LastDate ) < 12
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _Year ), "(select one year for YoY)",
+			        IF (
+			            _IsPartialYear,
+			            "vs Jan-" & FORMAT ( _LastDate, "mmm" ) & " " & ( _Year - 1 ),
+			            "vs " & ( _Year - 1 )
+			        )
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Labels
+		lineageTag: 145f4bb6-f450-470b-a0e3-bc867620e0a4
+
+	/// Active product category and country selection as text ('All categories | All countries' when nothing is filtered).
+	measure 'Label - Scope' =
+			// Active product category and country selection as text
+			// Shows the value when one is selected, 'Multiple' when several, 'All' when nothing is filtered
+			VAR _Category =
+			    IF (
+			        HASONEVALUE ( DimProduct[CategoryName] ), SELECTEDVALUE ( DimProduct[CategoryName] ),
+			        IF ( ISFILTERED ( DimProduct[CategoryName] ), "Multiple categories", "All categories" )
+			    )
+			VAR _Country =
+			    IF (
+			        HASONEVALUE ( DimTerritory[Country] ), SELECTEDVALUE ( DimTerritory[Country] ),
+			        IF ( ISFILTERED ( DimTerritory[Country] ), "Multiple countries", "All countries" )
+			    )
+			VAR _Result = _Category & " | " & _Country
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Labels
+		lineageTag: 20496212-a2fa-426e-901e-f88deebfd83f
+
+	/// Page 1 title.
+	measure 'P1 - Page Title' =
+			// Page 1 title
+			VAR _Result = "Executive Overview | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 35041d07-e33e-44b5-b043-c19630e0e67c
+
+	/// Page 1 headline insight: revenue, YoY, gross margin change and return rate for the selection.
+	measure 'P1 - Page Subtitle' =
+			// Page 1 headline insight: revenue, YoY, gross margin change and return rate for the selection
+			VAR _Revenue = [Revenue]
+			VAR _RevenuePY = [Revenue PY]
+			VAR _Margin = [Gross Margin %]
+			VAR _MarginPY = [Gross Margin % PY]
+			// Revenue as $M, or $K when below one million
+			VAR _RevenueText =
+			    IF (
+			        ABS ( _Revenue ) >= 1000000,
+			        FORMAT ( _Revenue / 1000000, "$#,0.0" ) & "M",
+			        FORMAT ( _Revenue / 1000, "$#,0" ) & "K"
+			    )
+			// YoY text only when a prior year exists
+			VAR _YoYText =
+			    IF (
+			        ISBLANK ( _RevenuePY ), "",
+			        " (" & FORMAT ( [Revenue YoY %], "+0.0%;-0.0%" ) & " " & [Label - Comparison] & ")"
+			    )
+			// Margin with change in percentage points
+			VAR _MarginText =
+			    FORMAT ( _Margin, "0.0%" )
+			        & IF ( ISBLANK ( _MarginPY ), "", " (" & FORMAT ( ( _Margin - _MarginPY ) * 100, "+0.0;-0.0" ) & " pts)" )
+			VAR _Result =
+			    "Revenue " & _RevenueText & _YoYText & " at " & _MarginText & " gross margin. Return rate "
+			        & FORMAT ( [Return Rate %], "0.0%" ) & ". " & [Label - Scope]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 6a6938d3-4085-4565-8280-333a66682a22
+
+	/// Revenue KPI card subtitle: YoY direction and basis.
+	measure 'P1 - KPI Revenue Subtitle' =
+			// Revenue KPI card subtitle: YoY direction and basis
+			VAR _RevenuePY = [Revenue PY]
+			VAR _YoY = [Revenue YoY %]
+			VAR _Arrow = IF ( _YoY >= 0, "▲ ", "▼ " )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _RevenuePY ), "No prior-year comparison",
+			        _Arrow & FORMAT ( ABS ( _YoY ), "0.0%" ) & " " & [Label - Comparison]
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 1120a08f-d90b-45b4-84b9-73d378df3750
+
+	/// Gross profit KPI card subtitle: YoY direction and basis.
+	measure 'P1 - KPI Gross Profit Subtitle' =
+			// Gross profit KPI card subtitle: YoY direction and basis
+			VAR _GrossProfit = [Gross Profit]
+			VAR _GrossProfitPY = [Gross Profit PY]
+			VAR _YoY = DIVIDE ( _GrossProfit - _GrossProfitPY, _GrossProfitPY )
+			VAR _Arrow = IF ( _YoY >= 0, "▲ ", "▼ " )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _GrossProfitPY ), "No prior-year comparison",
+			        _Arrow & FORMAT ( ABS ( _YoY ), "0.0%" ) & " " & [Label - Comparison]
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: bc538c86-fbd8-4533-95cc-4fbaa1331a54
+
+	/// Gross margin KPI card subtitle: change in percentage points vs prior year.
+	measure 'P1 - KPI Gross Margin Subtitle' =
+			// Gross margin KPI card subtitle: change in percentage points vs prior year
+			VAR _MarginPY = [Gross Margin % PY]
+			VAR _ChangePts = ( [Gross Margin %] - _MarginPY ) * 100
+			VAR _Arrow = IF ( _ChangePts >= 0, "▲ ", "▼ " )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _MarginPY ), "No prior-year comparison",
+			        _Arrow & FORMAT ( ABS ( _ChangePts ), "0.0" ) & " pts " & [Label - Comparison]
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 4fab78ac-e047-4437-a041-4bd58a493835
+
+	/// Return rate KPI card subtitle: change in percentage points vs prior year (lower is better).
+	measure 'P1 - KPI Return Rate Subtitle' =
+			// Return rate KPI card subtitle: change in percentage points vs prior year (lower is better)
+			VAR _RatePY = [Return Rate % PY]
+			VAR _ChangePts = ( [Return Rate %] - _RatePY ) * 100
+			VAR _Arrow = IF ( _ChangePts >= 0, "▲ ", "▼ " )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _RatePY ), "No prior-year comparison",
+			        _Arrow & FORMAT ( ABS ( _ChangePts ), "0.0" ) & " pts " & [Label - Comparison] & " (lower is better)"
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 72d067fd-f150-409f-ba1e-9016fe90cf12
+
+	/// Title of the monthly revenue vs prior year chart.
+	measure 'P1 - Revenue Trend Title' =
+			// Title of the monthly revenue vs prior year chart
+			VAR _Result = "Monthly Revenue vs Prior Year | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 22f03611-aeb3-4640-aa54-6d4e6866e39e
+
+	/// Subtitle of the revenue trend chart: latest month revenue and MoM change.
+	measure 'P1 - Revenue Trend Subtitle' =
+			// Subtitle of the revenue trend chart: latest month revenue and MoM change
+			// 1. Latest order date inside the current selection and its month boundaries
+			VAR _LatestDate = MAX ( FactSales[OrderDate] )
+			VAR _MonthStart = DATE ( YEAR ( _LatestDate ), MONTH ( _LatestDate ), 1 )
+			VAR _MonthEnd = EOMONTH ( _LatestDate, 0 )
+			// 2. Revenue and MoM for that month
+			VAR _MonthRevenue = CALCULATE ( [Revenue], DATESBETWEEN ( DimDate[Date], _MonthStart, _MonthEnd ) )
+			VAR _MoM = CALCULATE ( [Revenue MoM %], DATESBETWEEN ( DimDate[Date], _MonthStart, _MonthEnd ) )
+			VAR _RevenueText =
+			    IF (
+			        ABS ( _MonthRevenue ) >= 1000000,
+			        FORMAT ( _MonthRevenue / 1000000, "$#,0.0" ) & "M",
+			        FORMAT ( _MonthRevenue / 1000, "$#,0" ) & "K"
+			    )
+			VAR _MoMText = IF ( ISBLANK ( _MoM ), "", " (" & FORMAT ( _MoM, "+0.0%;-0.0%" ) & " MoM)" )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _LatestDate ), "No sales in selection",
+			        "Latest month " & FORMAT ( _LatestDate, "mmm yyyy" ) & ": " & _RevenueText & _MoMText
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 9798620d-5ec2-430c-b06c-43bad1f46b11
+
+	/// Title of the gross profit and margin chart.
+	measure 'P1 - Profit Trend Title' =
+			// Title of the gross profit and margin chart
+			VAR _Result = "Gross Profit and Margin % by Month | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 6e0e6d0a-4672-433d-a373-15bc88358c5d
+
+	/// Subtitle of the profit chart: lowest and highest monthly margin.
+	measure 'P1 - Profit Trend Subtitle' =
+			// Subtitle of the profit chart: lowest and highest monthly margin
+			// 1. Margin per month, months without sales removed
+			VAR _Months =
+			    FILTER (
+			        ADDCOLUMNS ( SUMMARIZE ( DimDate, DimDate[Year Month Number], DimDate[Year Month] ), "@GM", [Gross Margin %] ),
+			        NOT ISBLANK ( [@GM] )
+			    )
+			// 2. Highest and lowest month
+			VAR _High = TOPN ( 1, _Months, [@GM], DESC )
+			VAR _Low = TOPN ( 1, _Months, [@GM], ASC )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Months ) = 0, "No sales in selection",
+			        "Margin ranged from " & FORMAT ( MAXX ( _Low, [@GM] ), "0.0%" ) & " (" & CONCATENATEX ( _Low, DimDate[Year Month], ", " ) & ") to "
+			            & FORMAT ( MAXX ( _High, [@GM] ), "0.0%" ) & " (" & CONCATENATEX ( _High, DimDate[Year Month], ", " ) & ")"
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: a4c4bce8-59ad-4a04-96c7-bbc5a63206cb
+
+	/// Title of the return-rate anomaly chart.
+	measure 'P1 - Return Rate Title' =
+			// Title of the return-rate anomaly chart
+			VAR _Result = "Return Rate % by Subcategory (Top 10) | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 54fe68f2-621f-4d81-bf28-fbfd3ecf0bcd
+
+	/// Subtitle of the return-rate chart: highest subcategory (100+ units) vs overall rate.
+	measure 'P1 - Return Rate Subtitle' =
+			// Subtitle of the return-rate chart: highest subcategory (100+ units) vs the overall rate
+			// 1. Overall rate ignoring the chart's own subcategory filter (Top N)
+			VAR _Overall = CALCULATE ( [Return Rate %], REMOVEFILTERS ( DimProduct[SubcategoryName] ) )
+			// 2. Subcategories with enough volume to judge
+			VAR _Subcategories =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimProduct[SubcategoryName] ), "@RR", [Return Rate %], "@U", [Units Sold] ),
+			        [@U] >= 100 && NOT ISBLANK ( [@RR] )
+			    )
+			VAR _Top = TOPN ( 1, _Subcategories, [@RR], DESC )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Subcategories ) = 0, "No subcategory with 100+ units",
+			        CONCATENATEX ( _Top, DimProduct[SubcategoryName], ", " ) & " is highest at " & FORMAT ( MAXX ( _Top, [@RR] ), "0.0%" )
+			            & " vs " & FORMAT ( _Overall, "0.0%" ) & " overall (red = over 1.5x overall)"
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: e3587af6-de7b-4d8a-8d7a-42d06e1a85a6
+
+	/// Title of the order-size chart.
+	measure 'P1 - Order Size Title' =
+			// Title of the order-size chart
+			VAR _Result = "Average Order Value by Month | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: e2afe560-eb99-4dd4-9f7b-e548822534cc
+
+	/// Subtitle of the order-size chart: overall AOV plus peak and low month.
+	measure 'P1 - Order Size Subtitle' =
+			// Subtitle of the order-size chart: overall average order value plus peak and low month
+			// 1. AOV per month, months without sales removed
+			VAR _Months =
+			    FILTER (
+			        ADDCOLUMNS ( SUMMARIZE ( DimDate, DimDate[Year Month Number], DimDate[Year Month] ), "@AOV", [Average Order Value] ),
+			        NOT ISBLANK ( [@AOV] )
+			    )
+			VAR _High = TOPN ( 1, _Months, [@AOV], DESC )
+			VAR _Low = TOPN ( 1, _Months, [@AOV], ASC )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Months ) = 0, "No sales in selection",
+			        "Overall " & FORMAT ( [Average Order Value], "$#,0" ) & "; peak " & CONCATENATEX ( _High, DimDate[Year Month], ", " )
+			            & " (" & FORMAT ( MAXX ( _High, [@AOV] ), "$#,0" ) & "), low " & CONCATENATEX ( _Low, DimDate[Year Month], ", " )
+			            & " (" & FORMAT ( MAXX ( _Low, [@AOV] ), "$#,0" ) & ")"
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 1 - Overview
+		lineageTag: 03f2318c-64cc-4fb8-8850-32305719cde6
+
+	/// Page 2 title.
+	measure 'P2 - Page Title' =
+			// Page 2 title
+			VAR _Result = "Product Drivers & Drags | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: ff32e964-54fc-4574-beb8-3851fbcdc6f0
+
+	/// Page 2 headline: top gross-profit subcategory with its share, and the lowest-margin subcategory (100+ units). Assumes no product-attribute slicers on this page.
+	measure 'P2 - Page Subtitle' =
+			// Page 2 headline: top gross-profit subcategory with its share, and the lowest-margin subcategory (100+ units)
+			// Assumes no product-attribute slicers on this page
+			// 1. Gross profit, margin and units per subcategory
+			VAR _Subcategories =
+			    ADDCOLUMNS (
+			        ALL ( DimProduct[SubcategoryName] ),
+			        "@GP", [Gross Profit],
+			        "@GM", [Gross Margin %],
+			        "@U", [Units Sold]
+			    )
+			VAR _Top = TOPN ( 1, FILTER ( _Subcategories, NOT ISBLANK ( [@GP] ) ), [@GP], DESC )
+			VAR _Low = TOPN ( 1, FILTER ( _Subcategories, [@U] >= 100 && NOT ISBLANK ( [@GM] ) ), [@GM], ASC )
+			// 2. Totals across all products for the comparison
+			VAR _TotalGP = CALCULATE ( [Gross Profit], REMOVEFILTERS ( DimProduct ) )
+			VAR _OverallMargin = CALCULATE ( [Gross Margin %], REMOVEFILTERS ( DimProduct ) )
+			VAR _LowText =
+			    IF (
+			        COUNTROWS ( _Low ) = 0, "",
+			        " Lowest margin: " & CONCATENATEX ( _Low, DimProduct[SubcategoryName], ", " ) & " at " & FORMAT ( MAXX ( _Low, [@GM] ), "0.0%" )
+			            & " vs " & FORMAT ( _OverallMargin, "0.0%" ) & " overall."
+			    )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Top ) = 0, "No sales in selection",
+			        CONCATENATEX ( _Top, DimProduct[SubcategoryName], ", " ) & " is the top gross-profit driver ("
+			            & FORMAT ( DIVIDE ( MAXX ( _Top, [@GP] ), _TotalGP ), "0%" ) & " of total)." & _LowText
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: 285a0984-46e8-41e1-a862-42e39510f86d
+
+	/// Title of the subcategory scatter.
+	measure 'P2 - Scatter Title' =
+			
+			// Title of the subcategory scatter, follows the chosen Y-axis metric
+			VAR _Metric = [Selected Metric Name]
+			VAR _Result = _Metric & " vs Gross Margin % by Subcategory | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: 0fe1fb3f-7feb-4fdc-ae1c-1102d73527e0
+
+	/// Subtitle of the scatter: how many subcategories earn below the overall margin.
+	measure 'P2 - Scatter Subtitle' =
+			
+			// Subtitle of the scatter: how many subcategories earn below the overall margin
+			VAR _OverallMargin = CALCULATE ( [Gross Margin %], REMOVEFILTERS ( DimProduct[SubcategoryName] ) )
+			// Subcategories that have sales in the selection
+			VAR _Subcategories =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimProduct[SubcategoryName] ), "@GM", [Gross Margin %], "@R", [Revenue] ),
+			        NOT ISBLANK ( [@R] )
+			    )
+			VAR _BelowOverall = COUNTROWS ( FILTER ( _Subcategories, [@GM] < _OverallMargin ) )
+			VAR _Result =
+			    _BelowOverall & " of " & COUNTROWS ( _Subcategories ) & " subcategories earn below the "
+			        & FORMAT ( _OverallMargin, "0.0%" ) & " overall margin (bubble size = units sold)"
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: 5b494f79-fb9f-49de-8b22-0a5d17e54fdf
+
+	/// Title of the Top 10 products chart.
+	measure 'P2 - Top 10 Title' = ```
+			
+			// Title of the Top 10 products chart, follows the chosen metric
+			VAR _Metric = [Selected Metric Name]
+			VAR _Result = "Top 10 Products by " & _Metric & " | " & [Label - Period]
+			RETURN
+			    _Result
+			
+			```
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: eebdf2d3-beaf-434c-9bb6-cd162c225210
+
+	/// Subtitle of the Top 10 chart: share of total gross profit delivered by the 10 products.
+	measure 'P2 - Top 10 Subtitle' = ```
+			
+			// Subtitle of the Top 10 chart: share of the chosen metric delivered by the 10 products
+			// ALL / REMOVEFILTERS ignore the chart's own Top N filter
+			VAR _Metric = [Selected Metric Name]
+			VAR _Top10 = TOPN ( 10, ALL ( DimProduct[ProductName] ), [Selected Metric], DESC )
+			VAR _Top10Value = SUMX ( _Top10, [Selected Metric] )
+			VAR _Total = CALCULATE ( [Selected Metric], REMOVEFILTERS ( DimProduct ) )
+			VAR _Result =
+			    "Top 10 products deliver " & FORMAT ( DIVIDE ( _Top10Value, _Total ), "0%" ) & " of total " & LOWER ( _Metric )
+			RETURN
+			    _Result
+			
+			```
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: 7129ea64-0466-4624-a2a5-6c075a3c6f88
+
+	/// Title of the Bottom 10 products chart.
+	measure 'P2 - Bottom 10 Title' =
+			// Title of the Bottom 10 products chart
+			VAR _Result = "Bottom 10 Products by Gross Margin % (min 50 units) | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: b76c6a67-c705-402a-8dcd-f1d1411163f0
+
+	/// Subtitle of the Bottom 10 chart: lowest-margin product vs overall margin.
+	measure 'P2 - Bottom 10 Subtitle' =
+			// Subtitle of the Bottom 10 chart: lowest-margin product (50+ units) vs overall margin
+			// Name is the tie-breaker so variants with the same margin return a single product
+			VAR _Products =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimProduct[ProductName] ), "@GM", [Gross Margin %], "@U", [Units Sold] ),
+			        [@U] >= 50 && NOT ISBLANK ( [@GM] )
+			    )
+			VAR _Lowest = TOPN ( 1, _Products, [@GM], ASC, DimProduct[ProductName], ASC )
+			VAR _OverallMargin = CALCULATE ( [Gross Margin %], REMOVEFILTERS ( DimProduct ) )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Products ) = 0, "No product with 50+ units",
+			        CONCATENATEX ( _Lowest, DimProduct[ProductName], ", " ) & " has the lowest margin at " & FORMAT ( MAXX ( _Lowest, [@GM] ), "0.0%" )
+			            & " vs " & FORMAT ( _OverallMargin, "0.0%" ) & " overall"
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 2 - Products
+		lineageTag: 1c943d8d-e215-43da-be66-d904c08fde1e
+
+	/// Page 3 title.
+	measure 'P3 - Page Title' =
+			// Page 3 title
+			VAR _Result = "Regional Markets | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 3 - Regions
+		lineageTag: b54cf70f-80ac-492d-a09b-c16ec4ae41d3
+
+	/// Page 3 headline: leading region with share of revenue, and lowest-margin region.
+	measure 'P3 - Page Subtitle' =
+			// Page 3 headline: leading region with share of revenue, and the lowest-margin region
+			// 1. Revenue and margin per region, regions without sales removed
+			VAR _Regions =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimTerritory[Region] ), "@Rev", [Revenue], "@GM", [Gross Margin %] ),
+			        NOT ISBLANK ( [@Rev] )
+			    )
+			VAR _Top = TOPN ( 1, _Regions, [@Rev], DESC )
+			VAR _Low = TOPN ( 1, _Regions, [@GM], ASC )
+			// 2. Totals for share and comparison
+			VAR _TopRevenue = MAXX ( _Top, [@Rev] )
+			VAR _TotalRevenue = CALCULATE ( [Revenue], REMOVEFILTERS ( DimTerritory ) )
+			VAR _OverallMargin = CALCULATE ( [Gross Margin %], REMOVEFILTERS ( DimTerritory ) )
+			VAR _RevenueText =
+			    IF (
+			        _TopRevenue >= 1000000,
+			        FORMAT ( _TopRevenue / 1000000, "$#,0.0" ) & "M",
+			        FORMAT ( _TopRevenue / 1000, "$#,0" ) & "K"
+			    )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Regions ) = 0, "No sales in selection",
+			        CONCATENATEX ( _Top, DimTerritory[Region], ", " ) & " leads with " & _RevenueText & " ("
+			            & FORMAT ( DIVIDE ( _TopRevenue, _TotalRevenue ), "0%" ) & " of revenue). Lowest margin: "
+			            & CONCATENATEX ( _Low, DimTerritory[Region], ", " ) & " at " & FORMAT ( MAXX ( _Low, [@GM] ), "0.0%" )
+			            & " vs " & FORMAT ( _OverallMargin, "0.0%" ) & " overall."
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 3 - Regions
+		lineageTag: 0287ab08-961d-4cfd-8f12-fe1b84cacbf6
+
+	/// Title of the revenue by region chart.
+	measure 'P3 - Region Revenue Title' =
+			
+			// Title of the region chart, follows the chosen metric
+			VAR _Metric = [Selected Metric Name]
+			VAR _Result = _Metric & " by Region | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 3 - Regions
+		lineageTag: dd74284e-94a7-4f91-bba9-ac86bfc16804
+
+	/// Subtitle of the region chart: colour legend with comparison basis.
+	measure 'P3 - Region Revenue Subtitle' =
+			
+			// Subtitle of the region chart: colour legend with the chosen metric and comparison basis
+			VAR _Metric = [Selected Metric Name]
+			VAR _Result =
+			    "Bar colour = " & LOWER ( _Metric ) & " growth " & [Label - Comparison] & " (green up, red down, grey n/a)"
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 3 - Regions
+		lineageTag: a1d1a857-1c72-48e5-8442-9ee45bd0c945
+
+	/// Title of the regional scorecard matrix.
+	measure 'P3 - Scorecard Title' =
+			// Title of the regional scorecard matrix
+			VAR _Result = "Regional Scorecard | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 3 - Regions
+		lineageTag: d55e3eca-07a3-4085-a724-cefc87d08a1f
+
+	/// Subtitle of the scorecard: count of regions below overall margin or with outlier return rates.
+	measure 'P3 - Scorecard Subtitle' =
+			// Subtitle of the scorecard: regions below the overall margin and regions with outlier return rates
+			// 1. Overall benchmarks across all regions
+			VAR _OverallMargin = CALCULATE ( [Gross Margin %], REMOVEFILTERS ( DimTerritory ) )
+			VAR _OverallReturnRate = CALCULATE ( [Return Rate %], REMOVEFILTERS ( DimTerritory ) )
+			// 2. Margin and return rate per region, regions without sales removed
+			VAR _Regions =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimTerritory[Region] ), "@GM", [Gross Margin %], "@RR", [Return Rate %], "@Rev", [Revenue] ),
+			        NOT ISBLANK ( [@Rev] )
+			    )
+			// + 0 shows 0 instead of blank when no region qualifies
+			VAR _BelowMargin = COUNTROWS ( FILTER ( _Regions, [@GM] < _OverallMargin ) ) + 0
+			VAR _ReturnOutliers = COUNTROWS ( FILTER ( _Regions, [@RR] > _OverallReturnRate * 1.5 ) ) + 0
+			VAR _Result =
+			    _BelowMargin & " of " & COUNTROWS ( _Regions ) & " regions earn below the " & FORMAT ( _OverallMargin, "0.0%" )
+			        & " overall margin; " & _ReturnOutliers & " have return rates above 1.5x the overall " & FORMAT ( _OverallReturnRate, "0.0%" )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 3 - Regions
+		lineageTag: af318160-f2a4-4d63-a4da-d15b5866dd85
+
+	/// Page 4 title.
+	measure 'P4 - Page Title' =
+			// Page 4 title
+			VAR _Result = "Customer Segments | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: 5a300307-f138-400f-8547-5371bb3b6c95
+
+	/// Page 4 headline: income band driving most revenue and the most valuable band per customer.
+	measure 'P4 - Page Subtitle' =
+			// Page 4 headline: income band driving most revenue and the most valuable band per customer
+			// 1. Revenue and revenue per customer by band, bands without sales removed
+			VAR _Bands =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimCustomer[Income Band] ), "@Rev", [Revenue], "@RPC", [Revenue per Customer] ),
+			        NOT ISBLANK ( [@Rev] )
+			    )
+			VAR _TopRevenueBand = TOPN ( 1, _Bands, [@Rev], DESC )
+			VAR _TopValueBand = TOPN ( 1, _Bands, [@RPC], DESC )
+			// 2. Totals across all bands for share and comparison
+			VAR _TotalRevenue = CALCULATE ( [Revenue], REMOVEFILTERS ( DimCustomer[Income Band] ) )
+			VAR _AverageRPC = CALCULATE ( [Revenue per Customer], REMOVEFILTERS ( DimCustomer[Income Band] ) )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Bands ) = 0, "No sales in selection",
+			        CONCATENATEX ( _TopRevenueBand, DimCustomer[Income Band], ", " ) & " drives the most revenue ("
+			            & FORMAT ( DIVIDE ( MAXX ( _TopRevenueBand, [@Rev] ), _TotalRevenue ), "0%" ) & "); "
+			            & CONCATENATEX ( _TopValueBand, DimCustomer[Income Band], ", " ) & " customers are the most valuable at "
+			            & FORMAT ( MAXX ( _TopValueBand, [@RPC] ), "$#,0" ) & " each vs " & FORMAT ( _AverageRPC, "$#,0" ) & " average."
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: b0b031e7-3227-436a-8d6a-02d600033454
+
+	/// Active customers KPI card subtitle.
+	measure 'P4 - KPI Customers Subtitle' =
+			// Active customers KPI card subtitle: YoY direction and basis
+			VAR _Customers = [Customers]
+			VAR _CustomersPY = [Customers PY]
+			VAR _YoY = DIVIDE ( _Customers - _CustomersPY, _CustomersPY )
+			VAR _Arrow = IF ( _YoY >= 0, "▲ ", "▼ " )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _CustomersPY ), "No prior-year comparison",
+			        _Arrow & FORMAT ( ABS ( _YoY ), "0.0%" ) & " " & [Label - Comparison]
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: 1d2bddd0-5b41-43ee-8842-54ec6fe1746c
+
+	/// Revenue per customer KPI card subtitle.
+	measure 'P4 - KPI Revenue per Customer Subtitle' =
+			// Revenue per customer KPI card subtitle: YoY direction and basis
+			VAR _RPC = [Revenue per Customer]
+			VAR _RPCPY = [Revenue per Customer PY]
+			VAR _YoY = DIVIDE ( _RPC - _RPCPY, _RPCPY )
+			VAR _Arrow = IF ( _YoY >= 0, "▲ ", "▼ " )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _RPCPY ), "No prior-year comparison",
+			        _Arrow & FORMAT ( ABS ( _YoY ), "0.0%" ) & " " & [Label - Comparison]
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: 26bbd5bf-7051-4817-bd9f-a99e0adf6c72
+
+	/// Repeat customer % KPI card subtitle (change in percentage points).
+	measure 'P4 - KPI Repeat Customer Subtitle' =
+			// Repeat customer % KPI card subtitle: change in percentage points vs prior year
+			VAR _RepeatPY = [Repeat Customer % PY]
+			VAR _ChangePts = ( [Repeat Customer %] - _RepeatPY ) * 100
+			VAR _Arrow = IF ( _ChangePts >= 0, "▲ ", "▼ " )
+			VAR _Result =
+			    IF (
+			        ISBLANK ( _RepeatPY ), "No prior-year comparison",
+			        _Arrow & FORMAT ( ABS ( _ChangePts ), "0.0" ) & " pts " & [Label - Comparison]
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: 6d1e242b-306b-48aa-9fbc-28668685e921
+
+	/// Title of the income band value chart.
+	measure 'P4 - Band Value Title' =
+			// Title of the income band value chart
+			VAR _Result = "Revenue and Revenue per Customer by Income Band | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: 158f16e0-1386-4d5b-a0e0-95a29093c3f6
+
+	/// Subtitle of the band chart: band with the highest revenue per customer.
+	measure 'P4 - Band Value Subtitle' =
+			// Subtitle of the band chart: band with the highest revenue per customer
+			VAR _Bands =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimCustomer[Income Band] ), "@RPC", [Revenue per Customer] ),
+			        NOT ISBLANK ( [@RPC] )
+			    )
+			VAR _Top = TOPN ( 1, _Bands, [@RPC], DESC )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Bands ) = 0, "No sales in selection",
+			        "Highest value per customer: " & CONCATENATEX ( _Top, DimCustomer[Income Band], ", " ) & " at " & FORMAT ( MAXX ( _Top, [@RPC] ), "$#,0" )
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: c56d2943-f8c0-4c8e-94cf-47862cfc4340
+
+	/// Title of the purchasing behaviour matrix.
+	measure 'P4 - Behaviour Title' =
+			// Title of the purchasing behaviour matrix
+			VAR _Result = "Purchasing Behaviour by Income Band | " & [Label - Period]
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: 83ffd3f9-7711-4c00-9978-35f9c42f92bc
+
+	/// Subtitle of the behaviour matrix: range of orders per customer and AOV across bands.
+	measure 'P4 - Behaviour Subtitle' =
+			// Subtitle of the behaviour matrix: range of orders per customer and average order value across bands
+			VAR _Bands =
+			    FILTER (
+			        ADDCOLUMNS ( ALL ( DimCustomer[Income Band] ), "@OPC", [Orders per Customer], "@AOV", [Average Order Value] ),
+			        NOT ISBLANK ( [@OPC] )
+			    )
+			VAR _Result =
+			    IF (
+			        COUNTROWS ( _Bands ) = 0, "No sales in selection",
+			        "Orders per customer " & FORMAT ( MINX ( _Bands, [@OPC] ), "0.00" ) & " to " & FORMAT ( MAXX ( _Bands, [@OPC] ), "0.00" )
+			            & "; average order value " & FORMAT ( MINX ( _Bands, [@AOV] ), "$#,0" ) & " to " & FORMAT ( MAXX ( _Bands, [@AOV] ), "$#,0" ) & " across bands"
+			    )
+			RETURN
+			    _Result
+		displayFolder: 05 Dynamic Text\Page 4 - Customers
+		lineageTag: 5abd8688-3b36-49c1-a9aa-637d9d7b8d6a
+
+	measure 'Selected Metric Name' =
+			
+			// Name of the metric chosen in the Metric Selector slicer
+			// Reads the Order column: the label column is part of a composite key and errors if referenced alone
+			// Falls back to Gross Profit when none or several are selected
+			VAR _Order =
+			    SELECTEDVALUE ( 'Metric Selector'[Metric Selector Order], 1 )
+			VAR _Name =
+			    SWITCH (
+			        _Order,
+			        0, "Revenue",
+			        1, "Gross Profit",
+			        2, "Units Sold"
+			    )
+			RETURN
+			    _Name
+		displayFolder: 04 Analysis\Metric Switch
+		lineageTag: 9f8fcd4e-3a20-492e-8f4f-0a0c8fa72594
+
+	measure 'Selected Metric' =
+			
+			// Value of the metric chosen in the Metric Selector slicer
+			// Used by titles, subtitles and the Top N fallback; the visuals use the field parameter directly
+			VAR _Order =
+			    SELECTEDVALUE ( 'Metric Selector'[Metric Selector Order], 1 )
+			VAR _Value =
+			    SWITCH (
+			        _Order,
+			        0, [Revenue],
+			        1, [Gross Profit],
+			        2, [Units Sold]
+			    )
+			RETURN
+			    _Value
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: 04 Analysis\Metric Switch
+		lineageTag: abd5d8de-047e-4414-9ffe-1def6e72a30d
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Units Sold PY' =
+			
+			// Units sold in the same period last year, like-for-like (see Revenue PY)
+			// 1. Cut-off = last sales date minus 12 months
+			VAR _Cutoff = EDATE ( [Last Sales Date], -12 )
+			// 2. Only valid when exactly one year is in context; otherwise blank
+			VAR _OneYear = HASONEVALUE ( DimDate[Year] )
+			VAR _UnitsSoldPY =
+			    IF (
+			        _OneYear,
+			        CALCULATE ( [Units Sold], SAMEPERIODLASTYEAR ( DimDate[Date] ), DimDate[Date] <= _Cutoff )
+			    )
+			RETURN
+			    _UnitsSoldPY
+		formatString: 0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 57c89945-64a2-46fb-a423-292a53f597b9
+
+	measure 'Selected Metric PY' =
+			
+			// Prior-year value of the metric chosen in the Metric Selector slicer
+			VAR _Order =
+			    SELECTEDVALUE ( 'Metric Selector'[Metric Selector Order], 1 )
+			VAR _ValuePY =
+			    SWITCH (
+			        _Order,
+			        0, [Revenue PY],
+			        1, [Gross Profit PY],
+			        2, [Units Sold PY]
+			    )
+			RETURN
+			    _ValuePY
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		displayFolder: 04 Analysis\Metric Switch
+		lineageTag: 135a417c-656d-40d4-b0a7-9b7a6e10aa4d
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Selected Metric YoY %' =
+			
+			// Growth of the chosen metric vs the same period last year (blank when no comparable prior year)
+			VAR _Value = [Selected Metric]
+			VAR _ValuePY = [Selected Metric PY]
+			VAR _YoY = DIVIDE ( _Value - _ValuePY, _ValuePY )
+			RETURN
+			    _YoY
+		displayFolder: 04 Analysis\Metric Switch
+		lineageTag: 40d8e8ce-b98e-4ac3-a6a0-fe81d10cc6b6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CF - Selected Growth' =
+			
+			// Bar colour by YoY growth of the chosen metric: green = growth, red = decline, grey = no comparable prior year
+			VAR _YoY = [Selected Metric YoY %]
+			VAR _Color =
+			    IF (
+			        ISBLANK ( _YoY ), "#9CA3AF",
+			        IF ( _YoY >= 0, "#2E7D32", "#C62828" )
+			    )
+			RETURN
+			    _Color
+		displayFolder: 06 Conditional Formatting\Font & Bar Colors
+		lineageTag: 2730a267-2119-479f-840d-943f08dce2ff
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: e6c7c6e4-2b49-45e2-a6e6-23d917be3d64
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+

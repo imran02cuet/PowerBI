@@ -1,0 +1,85 @@
+/// FACT. Grain: one row per order line item (OrderNumber + OrderLineItem). Merges the Sales 2020, 2021 and 2022 source files (56,046 rows; orders 01-Jan-2020 to 30-Jun-2022). Relationships: DimDate (OrderDate = active, StockDate = inactive, use USERELATIONSHIP), DimProduct, DimCustomer, DimTerritory. Source dates are dd-MM-yyyy and are parsed with the en-GB culture.
+table FactSales
+	lineageTag: c7d5a341-50e8-4106-97fc-50d17a2fff94
+
+	/// Date the order was placed. Source text dd-MM-yyyy parsed as en-GB. Active relationship to DimDate[Date].
+	column OrderDate
+		dataType: dateTime
+		formatString: dd-MMM-yyyy
+		lineageTag: 59e33556-1b0f-4bb6-9746-9e504f2ee27b
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+	/// Date the item was stocked/available in inventory. Source text dd-MM-yyyy parsed as en-GB. Inactive relationship to DimDate[Date]; activate with USERELATIONSHIP in a measure.
+	column StockDate
+		dataType: dateTime
+		formatString: dd-MMM-yyyy
+		lineageTag: b2edc1ae-6d82-4a5b-91da-c2b4b87fd446
+		summarizeBy: none
+		sourceColumn: StockDate
+
+	/// Order identifier (text). Part of the row grain together with OrderLineItem. Use a distinct count of this column to count orders.
+	column OrderNumber
+		dataType: string
+		lineageTag: d0577248-c6c4-4772-b93e-5a41bbbe45ec
+		summarizeBy: none
+		sourceColumn: OrderNumber
+
+	/// Foreign key to DimProduct[ProductKey]. Hidden; use DimProduct attributes in visuals.
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a83b8856-f1ec-46e4-acef-aee48a0acba2
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	/// Foreign key to DimCustomer[CustomerKey]. Hidden; use DimCustomer attributes in visuals.
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b7a457cc-a9ee-4024-a9f5-e7f68d855c05
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	/// Foreign key to DimTerritory[TerritoryKey]. Hidden; use DimTerritory attributes in visuals.
+	column TerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4a56682e-6eb7-4dd7-b36b-eb518bcd78f1
+		summarizeBy: none
+		sourceColumn: TerritoryKey
+
+	/// Line number within the order. Together with OrderNumber it uniquely identifies a sales row. Not additive; do not sum.
+	column OrderLineItem
+		dataType: int64
+		formatString: 0
+		lineageTag: 6d18d97d-d2a7-4699-a971-f7d0cf22c414
+		summarizeBy: none
+		sourceColumn: OrderLineItem
+
+	/// Number of units ordered on the line. Additive (default aggregation: Sum).
+	column OrderQuantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: 916ded99-d7c9-4d31-bd43-097848b0edfd
+		summarizeBy: sum
+		sourceColumn: OrderQuantity
+
+	partition FactSales = m
+		mode: import
+		source =
+				let
+				    Base = "https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/",
+				    S2020 = Table.PromoteHeaders(Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/001%20Sales%20Data%202020.csv"), [Delimiter=",", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.None]), [PromoteAllScalars=true]),
+				    S2021 = Table.PromoteHeaders(Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/002%20Sales%20Data%202021.csv"), [Delimiter=",", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.None]), [PromoteAllScalars=true]),
+				    S2022 = Table.PromoteHeaders(Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/003%20Sales%20Data%202022.csv"), [Delimiter=",", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.None]), [PromoteAllScalars=true]),
+				    Combined = Table.Combine({S2020, S2021, S2022}),
+				    Typed = Table.TransformColumnTypes(Combined, {{"OrderDate", type date}, {"StockDate", type date}}, "en-GB"),
+				    Typed2 = Table.TransformColumnTypes(Typed, {{"OrderNumber", type text}, {"ProductKey", Int64.Type}, {"CustomerKey", Int64.Type}, {"TerritoryKey", Int64.Type}, {"OrderLineItem", Int64.Type}, {"OrderQuantity", Int64.Type}}, "en-US"),
+				    Clean = Table.SelectRows(Typed2, each [OrderNumber] <> null and [OrderNumber] <> "" and [ProductKey] <> null)
+				in
+				    Clean
+

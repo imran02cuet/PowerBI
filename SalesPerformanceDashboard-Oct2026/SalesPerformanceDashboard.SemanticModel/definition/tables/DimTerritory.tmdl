@@ -1,0 +1,47 @@
+/// DIMENSION (sales territory). One row per sales territory (10 rows) with the geography hierarchy Continent > Country > Region. The source key SalesTerritoryKey is renamed TerritoryKey to match the fact tables. Filters FactSales and FactReturns via TerritoryKey.
+table DimTerritory
+	lineageTag: 9b94c92c-338d-4781-8bad-de70a49f4e67
+
+	/// Primary key of the sales territory. Hidden; renamed from SalesTerritoryKey in the source to match the fact tables.
+	column TerritoryKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: 4ade918d-2427-4e1c-8a78-7abfca610ddf
+		summarizeBy: none
+		sourceColumn: TerritoryKey
+
+	/// Sales region name (lowest level of the Continent > Country > Region hierarchy).
+	column Region
+		dataType: string
+		lineageTag: 239f0bc4-0b53-4acc-be37-32b4970ecaac
+		summarizeBy: none
+		sourceColumn: Region
+
+	/// Country of the sales territory.
+	column Country
+		dataType: string
+		lineageTag: 30d2ac29-17f1-4702-83e8-ebc4c2610120
+		summarizeBy: none
+		sourceColumn: Country
+
+	/// Continent of the sales territory (top level of the geography hierarchy).
+	column Continent
+		dataType: string
+		lineageTag: df546355-7993-4291-93b0-13a2292a6199
+		summarizeBy: none
+		sourceColumn: Continent
+
+	partition DimTerritory = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/010%20Territory%20Lookup.csv"), [Delimiter=",", Columns=4, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Renamed = Table.RenameColumns(Promoted, {{"SalesTerritoryKey", "TerritoryKey"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"TerritoryKey", Int64.Type}, {"Region", type text}, {"Country", type text}, {"Continent", type text}}, "en-US"),
+				    Result = Table.Sort(Table.SelectRows(Typed, each [TerritoryKey] <> null), {{"TerritoryKey", Order.Ascending}})
+				in
+				    Result
+

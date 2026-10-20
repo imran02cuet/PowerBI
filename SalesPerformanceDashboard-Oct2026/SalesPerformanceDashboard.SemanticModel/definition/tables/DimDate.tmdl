@@ -1,0 +1,139 @@
+/// DIMENSION (date). One row per day, 01-Jan-2020 to 31-Dec-2023 (1,461 days), loaded from the Calendar Lookup file with Year, Quarter, Month, Day and weekend attributes added in Power Query. Marked as the model's date table. Filters FactSales via OrderDate (active) and StockDate (inactive), and FactReturns via ReturnDate. Month, Quarter, Year Month and Day of Week sort by their hidden number columns.
+table DimDate
+	lineageTag: e4eae6d2-1dd7-4d38-ab46-70f50c21298c
+	dataCategory: Time
+
+	/// Calendar date (one row per day, 01-Jan-2020 to 31-Dec-2023). Primary key of the date table; related to OrderDate, StockDate and ReturnDate.
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: dd-MMM-yyyy
+		lineageTag: cb2e3a2e-519c-40ca-b84a-42297834bad7
+		summarizeBy: none
+		sourceColumn: Date
+
+	/// Calendar year (e.g. 2021).
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: cad37a82-2c81-40ef-a758-ded3257611bf
+		summarizeBy: none
+		sourceColumn: Year
+
+	/// Quarter of the year as a number (1-4). Hidden; used to sort Quarter.
+	column 'Quarter Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 323b19a3-b1cf-45f7-95e5-f2ebeba5a90e
+		summarizeBy: none
+		sourceColumn: Quarter Number
+
+	/// Calendar quarter label (Q1-Q4). Sorted by Quarter Number. Combine with Year for a specific quarter.
+	column Quarter
+		dataType: string
+		lineageTag: accdec36-a81f-4181-a86c-beb53f4963b9
+		summarizeBy: none
+		sourceColumn: Quarter
+		sortByColumn: 'Quarter Number'
+
+	/// Month of the year as a number (1-12). Hidden; used to sort Month and Month Short.
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f04b4ac5-590b-459d-ae09-066ec5e03481
+		summarizeBy: none
+		sourceColumn: Month Number
+
+	/// Full month name (January-December). Sorted by Month Number. Spans all years; combine with Year or use Year Month for a specific month.
+	column Month
+		dataType: string
+		lineageTag: 3200fe15-401b-4259-b663-83c88ddeb375
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Month Number'
+
+	/// Abbreviated month name (Jan-Dec). Sorted by Month Number. Spans all years.
+	column 'Month Short'
+		dataType: string
+		lineageTag: f9a7d6d1-44cb-4c94-a9f1-e6f6079e496d
+		summarizeBy: none
+		sourceColumn: Month Short
+		sortByColumn: 'Month Number'
+
+	/// Year and month as a sortable number in yyyyMM format (e.g. 202106). Hidden; used to sort Year Month.
+	column 'Year Month Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e35e8398-f4c2-477b-8814-d7482ac57bf3
+		summarizeBy: none
+		sourceColumn: Year Month Number
+
+	/// Month and year label (e.g. Jun 2021). Sorted chronologically by Year Month Number. Recommended axis for monthly trends.
+	column 'Year Month'
+		dataType: string
+		lineageTag: ad9ded36-4d70-437d-9f50-dd2cad542e41
+		summarizeBy: none
+		sourceColumn: Year Month
+		sortByColumn: 'Year Month Number'
+
+	/// Day of the month (1-31).
+	column 'Day of Month'
+		dataType: int64
+		formatString: 0
+		lineageTag: 9fdb986a-7025-44f5-a40f-f3c3beeb256f
+		summarizeBy: none
+		sourceColumn: Day of Month
+
+	/// Day of the week as a number, Monday = 1 to Sunday = 7. Hidden; used to sort Day of Week.
+	column 'Day of Week Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 14695ad2-02c1-4f51-a9da-cb51d807a93f
+		summarizeBy: none
+		sourceColumn: Day of Week Number
+
+	/// Day name (Monday-Sunday). Sorted Monday first via Day of Week Number.
+	column 'Day of Week'
+		dataType: string
+		lineageTag: 7c186a83-8f4e-4f88-85b7-d54f9490256e
+		summarizeBy: none
+		sourceColumn: Day of Week
+		sortByColumn: 'Day of Week Number'
+
+	/// 'Weekend' for Saturday and Sunday, otherwise 'Weekday'.
+	column 'Is Weekend'
+		dataType: string
+		lineageTag: 724a2ace-404d-429c-9b42-c4ac1547cf32
+		summarizeBy: none
+		sourceColumn: Is Weekend
+
+	partition DimDate = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/005%20Calendar%20Lookup.csv"), [Delimiter=",", Columns=1, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Renamed = Table.RenameColumns(Promoted, {{Table.ColumnNames(Promoted){0}, "Date"}}),
+				    NonBlank = Table.SelectRows(Renamed, each [Date] <> null and Text.Trim([Date]) <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"Date", type date}}, "en-GB"),
+				    Distinct = Table.Distinct(Typed),
+				    AddYear = Table.AddColumn(Distinct, "Year", each Date.Year([Date]), Int64.Type),
+				    AddQN = Table.AddColumn(AddYear, "Quarter Number", each Date.QuarterOfYear([Date]), Int64.Type),
+				    AddQ = Table.AddColumn(AddQN, "Quarter", each "Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    AddMN = Table.AddColumn(AddQ, "Month Number", each Date.Month([Date]), Int64.Type),
+				    AddM = Table.AddColumn(AddMN, "Month", each Date.ToText([Date], "MMMM", "en-US"), type text),
+				    AddMS = Table.AddColumn(AddM, "Month Short", each Date.ToText([Date], "MMM", "en-US"), type text),
+				    AddYMN = Table.AddColumn(AddMS, "Year Month Number", each Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type),
+				    AddYM = Table.AddColumn(AddYMN, "Year Month", each Date.ToText([Date], "MMM yyyy", "en-US"), type text),
+				    AddDOM = Table.AddColumn(AddYM, "Day of Month", each Date.Day([Date]), Int64.Type),
+				    AddDWN = Table.AddColumn(AddDOM, "Day of Week Number", each Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type),
+				    AddDW = Table.AddColumn(AddDWN, "Day of Week", each Date.ToText([Date], "dddd", "en-US"), type text),
+				    AddWE = Table.AddColumn(AddDW, "Is Weekend", each if Date.DayOfWeek([Date], Day.Monday) >= 5 then "Weekend" else "Weekday", type text),
+				    Sorted = Table.Sort(AddWE, {{"Date", Order.Ascending}})
+				in
+				    Sorted
+

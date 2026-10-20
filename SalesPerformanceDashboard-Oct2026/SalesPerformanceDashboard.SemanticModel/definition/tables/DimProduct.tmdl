@@ -1,0 +1,116 @@
+/// DIMENSION (product). One row per product: 293 products plus an 'Unknown' member (ProductKey = -1) used for return records whose product is missing from the lookup (294 rows). Flattened from the Product, Product Subcategory and Product Category lookups into a single hierarchy: Category > Subcategory > Product. Filters FactSales and FactReturns via ProductKey.
+table DimProduct
+	lineageTag: 02511e34-fa9a-4cf2-b988-0d1883ac8b5e
+
+	/// Primary key of the product. Hidden; -1 is the 'Unknown' member for products missing from the lookup.
+	column ProductKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: ad4e84ce-006f-45b5-b97d-5b88fe53812f
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	/// Stock keeping unit code of the product.
+	column ProductSKU
+		dataType: string
+		lineageTag: 326de040-b445-4fd7-b8fc-4e9af4aff98f
+		summarizeBy: none
+		sourceColumn: ProductSKU
+
+	/// Product name (lowest level of the Category > Subcategory > Product hierarchy).
+	column ProductName
+		dataType: string
+		lineageTag: 4b96f273-08ef-4c1d-82dd-1c6525103c70
+		summarizeBy: none
+		sourceColumn: ProductName
+
+	/// Product model name; several products (e.g. size or colour variants) can share one model.
+	column ModelName
+		dataType: string
+		lineageTag: 25a578ee-45b1-415a-8c4a-80c8ca8e1334
+		summarizeBy: none
+		sourceColumn: ModelName
+
+	/// Marketing description of the product.
+	column ProductDescription
+		dataType: string
+		lineageTag: b95b0c76-598c-4a13-adb4-77490b4aedc8
+		summarizeBy: none
+		sourceColumn: ProductDescription
+
+	/// Product colour as given in the source (includes 'Multi', 'Silver/Black' and 'NA' for products without a colour). 'Unknown' for the Unknown member.
+	column ProductColor
+		dataType: string
+		lineageTag: 57f06835-8bc1-48b3-a6a1-54fef5505f5e
+		summarizeBy: none
+		sourceColumn: ProductColor
+
+	/// Product size as given in the source. Stored as text because values mix numeric and lettered sizes; may hold a placeholder where size does not apply.
+	column ProductSize
+		dataType: string
+		lineageTag: 366ff61f-abfa-443a-8d6d-c88fc8a363a5
+		summarizeBy: none
+		sourceColumn: ProductSize
+
+	/// Product style code from the source: M, W, U or 0 where not applicable. 'Unknown' for the Unknown member.
+	column ProductStyle
+		dataType: string
+		lineageTag: cce44f22-38b7-4730-b3de-1cabe6926d60
+		summarizeBy: none
+		sourceColumn: ProductStyle
+
+	/// Unit cost of the product (decimal). Not additive; use it in measures (e.g. SUMX over FactSales) rather than summing the column. Blank for the Unknown member.
+	column ProductCost
+		dataType: decimal
+		formatString: #,0.00
+		lineageTag: 358cafac-3264-4714-9c89-b9177aa7b92d
+		summarizeBy: none
+		sourceColumn: ProductCost
+
+	/// Unit list price of the product (decimal). Not additive; use it in measures (e.g. SUMX over FactSales) rather than summing the column. Blank for the Unknown member.
+	column ProductPrice
+		dataType: decimal
+		formatString: #,0.00
+		lineageTag: 91d903b2-899c-42b0-8a4c-24a1a0ab1e50
+		summarizeBy: none
+		sourceColumn: ProductPrice
+
+	/// Product subcategory (middle level of the hierarchy). Flattened from the Product Subcategories lookup. 'Unknown' for the Unknown member.
+	column SubcategoryName
+		dataType: string
+		lineageTag: 9d550779-2060-499c-b11d-e7b769f74abc
+		summarizeBy: none
+		sourceColumn: SubcategoryName
+
+	/// Product category (top level of the hierarchy). Flattened from the Product Categories lookup. 'Unknown' for the Unknown member.
+	column CategoryName
+		dataType: string
+		lineageTag: a6c2526d-596d-478e-a80d-7b3aacf5bcb1
+		summarizeBy: none
+		sourceColumn: CategoryName
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+				    Prod = Table.PromoteHeaders(Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/006%20Product%20Lookup.csv"), [Delimiter=",", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]), [PromoteAllScalars=true]),
+				    ProdTyped = Table.TransformColumnTypes(Prod, {{"ProductKey", Int64.Type}, {"ProductSubcategoryKey", Int64.Type}, {"ProductSKU", type text}, {"ProductName", type text}, {"ModelName", type text}, {"ProductDescription", type text}, {"ProductColor", type text}, {"ProductSize", type text}, {"ProductStyle", type text}, {"ProductCost", Currency.Type}, {"ProductPrice", Currency.Type}}, "en-US"),
+				    Sub = Table.PromoteHeaders(Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/008%20Product%20Subcategories%20Lookup.csv"), [Delimiter=",", Columns=3, Encoding=65001, QuoteStyle=QuoteStyle.None]), [PromoteAllScalars=true]),
+				    SubTyped = Table.TransformColumnTypes(Sub, {{"ProductSubcategoryKey", Int64.Type}, {"SubcategoryName", type text}, {"ProductCategoryKey", Int64.Type}}, "en-US"),
+				    Cat = Table.PromoteHeaders(Csv.Document(Web.Contents("https://raw.githubusercontent.com/chiranjeevikudupudi/Power-BI-Projects/refs/heads/main/007%20Sales%20Dashboard/001_Datasets/007%20Product%20Categories%20Lookup.csv"), [Delimiter=",", Columns=2, Encoding=65001, QuoteStyle=QuoteStyle.None]), [PromoteAllScalars=true]),
+				    CatTyped = Table.TransformColumnTypes(Cat, {{"ProductCategoryKey", Int64.Type}, {"CategoryName", type text}}, "en-US"),
+				    SubWithCat = Table.NestedJoin(SubTyped, {"ProductCategoryKey"}, CatTyped, {"ProductCategoryKey"}, "Cat", JoinKind.LeftOuter),
+				    SubFlat = Table.ExpandTableColumn(SubWithCat, "Cat", {"CategoryName"}, {"CategoryName"}),
+				    SubSlim = Table.SelectColumns(SubFlat, {"ProductSubcategoryKey", "SubcategoryName", "CategoryName"}),
+				    Joined = Table.NestedJoin(ProdTyped, {"ProductSubcategoryKey"}, SubSlim, {"ProductSubcategoryKey"}, "Sub", JoinKind.LeftOuter),
+				    Expanded = Table.ExpandTableColumn(Joined, "Sub", {"SubcategoryName", "CategoryName"}, {"SubcategoryName", "CategoryName"}),
+				    Filled = Table.ReplaceValue(Expanded, null, "Unassigned", Replacer.ReplaceValue, {"SubcategoryName", "CategoryName"}),
+				    Final = Table.SelectColumns(Filled, {"ProductKey", "ProductSKU", "ProductName", "ModelName", "ProductDescription", "ProductColor", "ProductSize", "ProductStyle", "ProductCost", "ProductPrice", "SubcategoryName", "CategoryName"}),
+				    Valid = Table.SelectRows(Final, each [ProductKey] <> null),
+				    UnknownRow = #table(type table [ProductKey = Int64.Type, ProductSKU = text, ProductName = text, ModelName = text, ProductDescription = text, ProductColor = text, ProductSize = text, ProductStyle = text, ProductCost = Currency.Type, ProductPrice = Currency.Type, SubcategoryName = text, CategoryName = text], {{-1, "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", null, null, "Unknown", "Unknown"}}),
+				    Result = Table.Sort(Table.Combine({Valid, UnknownRow}), {{"ProductKey", Order.Ascending}})
+				in
+				    Result
+
