@@ -1,0 +1,53 @@
+table 'Analysis Metric'
+	lineageTag: c035476a-3d26-40f0-b5da-b2bc0cc6c798
+
+	column 'Analysis Metric'
+		lineageTag: 3f6fad66-ff8f-4bde-976e-eaf923cad965
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Analysis Metric Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Analysis Metric Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Analysis Metric Fields'
+		isHidden
+		lineageTag: 3efbc17a-d726-42e9-9f37-cac48bbf1597
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Analysis Metric Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Analysis Metric Order'
+		isHidden
+		formatString: 0
+		lineageTag: 72f0ddab-84d6-4d7c-872e-482f828998ad
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Analysis Metric' = calculated
+		mode: import
+		source =
+				{
+				    ("Total Net Profit", NAMEOF('_Measures'[Total Net Profit]), 0),
+				    ("Net Profit Margin %", NAMEOF('_Measures'[Net Profit Margin %]), 1),
+				    ("Total Revenue", NAMEOF('_Measures'[Total Revenue]), 2),
+				    ("Rent % of Revenue", NAMEOF('_Measures'[Rent % of Revenue]), 3),
+				    ("Staffing % of Revenue", NAMEOF('_Measures'[Staffing % of Revenue]), 4),
+				    ("COGS % of Revenue", NAMEOF('_Measures'[COGS % of Revenue]), 5),
+				    ("Loss-Making Store-Months %", NAMEOF('_Measures'[Loss-Making Store-Months %]), 6)
+				}
+
+	annotation PBI_Id = f495ccedb7e34fffabb66fa298c387f7
+

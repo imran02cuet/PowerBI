@@ -1,0 +1,1905 @@
+/// Dedicated measure table (no data). All report measures live here, organised in numbered display folders and sub-folders.
+table _Measures
+	lineageTag: c2d0112d-def9-48bb-9f4d-27ff2246bf82
+
+	/// Single selected calendar year; BLANK when zero or several years are in filter context. Drives all prior-year logic.
+	measure 'Selected Year' = SELECTEDVALUE(dim_date[year])
+		formatString: 0
+		displayFolder: 00 Helpers\Context
+		lineageTag: bad6b3ff-d7f6-422a-bd62-25f32e069094
+
+	/// Selected year minus 1; BLANK unless exactly one year is selected.
+	measure 'Prior Year' =
+			VAR Y = [Selected Year]
+			RETURN IF(ISBLANK(Y), BLANK(), Y - 1)
+		formatString: 0
+		displayFolder: 00 Helpers\Context
+		lineageTag: f6f202a5-9a8d-4e92-b559-db44195cf3fa
+
+	/// Gross revenue (monthly fact, full estate coverage).
+	measure 'Total Revenue' = SUM(fact_store_monthly_profitability[total_monthly_revenue_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 8b253c59-d9b4-48f6-8f6e-a8aea0dd0667
+
+	/// Cost of goods sold.
+	measure 'Total COGS' = SUM(fact_store_monthly_profitability[total_monthly_cogs_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: f4d6fe51-6571-4edd-9146-3ec03db7edd7
+
+	/// Rent actually charged in the monthly fact (varies around dim_store baseline).
+	measure 'Total Rent' = SUM(fact_store_monthly_profitability[monthly_rent_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 221ec214-b37a-469f-8b51-502985e171e7
+
+	/// Staffing cost actually charged in the monthly fact.
+	measure 'Total Staffing Cost' = SUM(fact_store_monthly_profitability[monthly_staffing_cost_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: d71e1600-aecd-4274-9616-a097c5db2076
+
+	/// Cost of loyalty rewards redeemed.
+	measure 'Total Loyalty Redemption Cost' = SUM(fact_store_monthly_profitability[loyalty_redemption_cost_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 11705e9b-79fa-4c29-9fdc-b270bc9a410c
+
+	/// Revenue - COGS - rent - staffing - loyalty redemption (reconciled on all 1,440 rows).
+	measure 'Total Net Profit' = SUM(fact_store_monthly_profitability[net_profit_gbp])
+		formatString: £#,0;-£#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: b581144c-45c1-45f6-b3bc-1eb7de9741d5
+
+	/// Revenue less COGS (before rent, staffing, loyalty).
+	measure 'Gross Profit' = [Total Revenue] - [Total COGS]
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 45e7d1f3-79bb-4c33-ab3d-14a8e4a011d7
+
+	/// Revenue from loyalty app members.
+	measure 'Loyalty Member Revenue' = SUM(fact_store_monthly_profitability[loyalty_member_spend_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: a9754087-4297-433f-8204-f93a63236181
+
+	/// Revenue from non-members.
+	measure 'Non-Member Revenue' = SUM(fact_store_monthly_profitability[non_member_spend_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: ce86cf8d-8834-4694-8a5a-1a5efe65cdbd
+
+	/// Number of store-month records (60 stores x 24 months = 1,440 at estate level).
+	measure Store-Months = COUNTROWS(fact_store_monthly_profitability)
+		formatString: #,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: d38a5615-8b8e-405b-82d9-30e00570e0c1
+
+	/// Distinct stores with monthly data in the current filter context.
+	measure 'Store Count' = DISTINCTCOUNT(fact_store_monthly_profitability[store_id])
+		formatString: #,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 8e4b706b-e496-4133-b232-19dea89b8e57
+
+	/// All stores in dim_store regardless of filters.
+	measure 'Estate Store Count' = COUNTROWS(ALL(dim_store))
+		formatString: #,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 24f6a26c-3dfd-461d-93af-556a636197b0
+
+	/// Store-months with negative net profit (actual sign, not the stored status label).
+	measure 'Loss-Making Store-Months' = COUNTROWS(FILTER(fact_store_monthly_profitability, fact_store_monthly_profitability[net_profit_gbp] < 0)) + 0
+		formatString: #,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 5f092513-e6ab-4b02-af16-d437cb0892b2
+
+	/// Sum of net profit across store-months where net profit < 0 (negative number).
+	measure 'Net Loss in Loss-Making Months' = CALCULATE(SUM(fact_store_monthly_profitability[net_profit_gbp]), fact_store_monthly_profitability[net_profit_gbp] < 0)
+		formatString: £#,0;-£#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: ee219bef-0c58-4c6c-ad28-f360a00ff24c
+
+	/// Simple average of monthly revenue per sq ft (no sq ft column exists, so a weighted version is not possible).
+	measure 'Avg Revenue per Sq Ft' = AVERAGE(fact_store_monthly_profitability[revenue_per_sqft_gbp])
+		formatString: £#,0.00
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: b0fcf978-dc27-42ad-9015-4ae5e8157b12
+
+	/// Average of avg_daily_footfall across store-months.
+	measure 'Avg Daily Footfall' = AVERAGE(fact_store_monthly_profitability[avg_daily_footfall])
+		formatString: #,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 99615752-7ba1-4b24-becc-789afb64bc02
+
+	/// Average customer dwell time in minutes.
+	measure 'Avg Dwell Time (min)' = AVERAGE(fact_store_monthly_profitability[avg_dwell_time_minutes])
+		formatString: 0.0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: 6b7a8a9a-7a32-4c98-8d84-3ffba78f84c8
+
+	/// Average monthly rent per store-month (fact).
+	measure 'Avg Monthly Rent per Store' = AVERAGE(fact_store_monthly_profitability[monthly_rent_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Monthly P&L
+		lineageTag: cf93da27-57c2-4a4e-b164-f83c5df9b3e0
+
+	/// Revenue in fact_daily_sales. SAMPLE ONLY (about 20% of possible store-days) - never compare with Total Revenue.
+	measure 'Sample Revenue' = SUM(fact_daily_sales[total_revenue_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 4742d3d2-da0e-4d07-b750-17f942ebdf28
+
+	/// Transactions in the daily sample.
+	measure 'Sample Transactions' = SUM(fact_daily_sales[total_transactions])
+		formatString: #,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: b112f0bc-9e25-40c9-9be8-ee67ea5e5a3b
+
+	/// Loyalty transactions in the daily sample.
+	measure 'Sample Loyalty Transactions' = SUM(fact_daily_sales[loyalty_transactions])
+		formatString: #,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: faa9fc3d-86ec-4dd5-b911-be3a76642767
+
+	/// Footfall in the daily sample.
+	measure 'Sample Footfall' = SUM(fact_daily_sales[footfall])
+		formatString: #,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 1d6e09ba-b33d-4925-b798-2ebee9fbfad1
+
+	/// Daily gross profit in the sample.
+	measure 'Sample Gross Profit' = SUM(fact_daily_sales[daily_gross_profit_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 9a72a07e-a0b6-45f2-996c-f2dcb46ca71b
+
+	/// Loyalty redemption cost in the daily sample.
+	measure 'Sample Redemption Cost' = SUM(fact_daily_sales[loyalty_redemption_cost_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 12cb7247-6008-4f9d-8f11-859ace398b3c
+
+	/// Espresso revenue (sample).
+	measure 'Sample Espresso Revenue' = SUM(fact_daily_sales[espresso_revenue_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 08b592ba-5dcb-4364-b301-88535d89ae7f
+
+	/// Filter coffee revenue (sample).
+	measure 'Sample Filter Revenue' = SUM(fact_daily_sales[filter_revenue_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 5824295d-98f0-46bb-98fb-7b4a2d1a16a0
+
+	/// Food revenue (sample).
+	measure 'Sample Food Revenue' = SUM(fact_daily_sales[food_revenue_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 5beeed69-f176-4139-a612-202f25641c71
+
+	/// Retail beans revenue (sample).
+	measure 'Sample Retail Beans Revenue' = SUM(fact_daily_sales[retail_beans_revenue_gbp])
+		formatString: £#,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 42b2ddc3-a488-4770-be85-15f0056aecd8
+
+	/// Total staff hours (sample).
+	measure 'Sample Staff Hours' = SUM(fact_daily_sales[total_staff_hours])
+		formatString: #,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 1636fa31-6b5f-41a3-8033-e3c3f531ee03
+
+	/// Rows in fact_daily_sales (a store-day can appear on more than one row).
+	measure 'Sample Records' = COUNTROWS(fact_daily_sales)
+		formatString: #,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: a0b8ecfd-32dc-41fa-bfb2-cc0f40449be5
+
+	/// Distinct store x date combinations in the sample (8,910 at estate level vs 10,000 rows).
+	measure 'Sample Store-Days' = COUNTROWS(SUMMARIZE(fact_daily_sales, fact_daily_sales[store_id], fact_daily_sales[date_id]))
+		formatString: #,0
+		displayFolder: 01 Base\Daily Sample
+		lineageTag: 92ef6584-7ec4-4571-9d91-d44f32fe1d04
+
+	/// Weighted net margin = total net profit / total revenue. Never average the stored net_profit_margin_pct column (it is a fraction and misweights small stores).
+	measure 'Net Profit Margin %' = DIVIDE([Total Net Profit], [Total Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: af986aa8-6651-4767-94c8-a926e4065745
+
+	/// Gross profit / revenue (monthly fact).
+	measure 'Gross Margin %' = DIVIDE([Gross Profit], [Total Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 2b1c7eee-00f7-41a0-afb0-49dd307bbdde
+
+	/// COGS as % of revenue.
+	measure 'COGS % of Revenue' = DIVIDE([Total COGS], [Total Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 7cc471fd-25e4-4e09-8fa8-014000ac5b2c
+
+	/// Staffing cost as % of revenue.
+	measure 'Staffing % of Revenue' = DIVIDE([Total Staffing Cost], [Total Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 15c75a2e-01b9-4583-9a67-0e59fa7f52ce
+
+	/// Rent as % of revenue (occupancy cost ratio).
+	measure 'Rent % of Revenue' = DIVIDE([Total Rent], [Total Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 8f94febe-13c9-4596-b885-101d42066ce1
+
+	/// Loyalty redemption cost as % of total revenue.
+	measure 'Loyalty Cost % of Revenue' = DIVIDE([Total Loyalty Redemption Cost], [Total Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 6607b9ce-8c3b-4aaa-93df-3f7e79726e5c
+
+	/// Average revenue per store-month (revenue efficiency independent of store count).
+	measure 'Revenue per Store-Month' = DIVIDE([Total Revenue], [Store-Months])
+		formatString: £#,0
+		displayFolder: 02 KPI\Profitability
+		lineageTag: eafff492-d3b4-47fd-806a-fcab26fe8511
+
+	/// Average net profit per store-month.
+	measure 'Net Profit per Store-Month' = DIVIDE([Total Net Profit], [Store-Months])
+		formatString: £#,0;-£#,0
+		displayFolder: 02 KPI\Profitability
+		lineageTag: f8aa2eed-d5d0-4053-8975-753324988a46
+
+	/// Share of store-months with negative net profit.
+	measure 'Loss-Making Store-Months %' = DIVIDE([Loss-Making Store-Months], [Store-Months])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 1f7c18b8-6689-4470-a879-27ef602ca2ae
+
+	/// Benchmark: margin of the whole estate for the selected period (store/region filters removed, date filters kept).
+	measure 'Estate Net Profit Margin %' = CALCULATE([Net Profit Margin %], REMOVEFILTERS(dim_store))
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: 1f38106f-54b0-41ad-bca0-b3aaaedbedc6
+
+	/// Benchmark: estate-wide loss-making store-month share.
+	measure 'Estate Loss-Making Store-Months %' = CALCULATE([Loss-Making Store-Months %], REMOVEFILTERS(dim_store))
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: b1182b23-8b3e-473b-985c-8d2c0f440ae9
+
+	/// Benchmark: estate-wide rent as % of revenue.
+	measure 'Estate Rent % of Revenue' = CALCULATE([Rent % of Revenue], REMOVEFILTERS(dim_store))
+		formatString: 0.0%
+		displayFolder: 02 KPI\Profitability
+		lineageTag: e42127c5-feef-42dd-a489-745495a047e4
+
+	/// Weighted share of revenue from loyalty members.
+	measure 'Loyalty Member Revenue %' = DIVIDE([Loyalty Member Revenue], [Total Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: b8169090-5827-4783-bfb6-35f6c19bd3a1
+
+	/// Redemption cost per GBP of member revenue (cost of the programme relative to the revenue it touches).
+	measure 'Redemption Cost % of Member Revenue' = DIVIDE([Total Loyalty Redemption Cost], [Loyalty Member Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: 3dfd41e7-1c5f-425a-9102-3563ee2130ed
+
+	/// Average store-level loyalty adoption rate (store attribute; not affected by date filters).
+	measure 'Avg Loyalty Adoption %' = AVERAGE(dim_store[loyalty_adoption_rate])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: 96f96f5b-993e-4c9d-83f4-a796c6b0c45d
+
+	/// Benchmark: estate-wide member revenue share.
+	measure 'Estate Loyalty Member Revenue %' = CALCULATE([Loyalty Member Revenue %], REMOVEFILTERS(dim_store))
+		formatString: 0.0%
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: c74022ec-de10-4d0b-ba4c-4136c7f2b0b5
+
+	/// Benchmark: estate-wide redemption cost % of member revenue.
+	measure 'Estate Redemption Cost % of Member Revenue' = CALCULATE([Redemption Cost % of Member Revenue], REMOVEFILTERS(dim_store))
+		formatString: 0.0%
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: 7aeaa370-5f77-4219-bcdf-dc7986410b21
+
+	/// Loyalty transactions / total transactions (daily sample).
+	measure 'Loyalty Txn Share % (Sample)' = DIVIDE([Sample Loyalty Transactions], [Sample Transactions])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: 59374c5e-6a44-4eac-a1e3-26c6bbea01f3
+
+	/// Revenue / transactions (daily sample).
+	measure 'Avg Transaction Value (Sample)' = DIVIDE([Sample Revenue], [Sample Transactions])
+		formatString: £0.00
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: 0977d3d4-379b-4e98-b722-158a1f0e439a
+
+	/// Redemption cost per loyalty transaction (daily sample).
+	measure 'Redemption Cost per Loyalty Txn (Sample)' = DIVIDE([Sample Redemption Cost], [Sample Loyalty Transactions])
+		formatString: £0.00
+		displayFolder: 02 KPI\Loyalty
+		lineageTag: 74694141-47f4-4a2e-a209-4882cee4e389
+
+	/// Espresso share of the four tracked streams (sample).
+	measure 'Espresso Share %' = DIVIDE([Sample Espresso Revenue], [Sample Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: 070331cd-69a6-4c12-8426-94f6e4323ab4
+
+	/// Filter coffee share (sample).
+	measure 'Filter Share %' = DIVIDE([Sample Filter Revenue], [Sample Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: eae67ab0-48f9-46db-914e-c30b4b5f3190
+
+	/// Food share (sample).
+	measure 'Food Share %' = DIVIDE([Sample Food Revenue], [Sample Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: 703f7910-0bbc-4ded-81ee-a2118b762bf9
+
+	/// Retail beans share (sample).
+	measure 'Retail Beans Share %' = DIVIDE([Sample Retail Beans Revenue], [Sample Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: 334f561b-2ed0-4d5b-bdf4-062527af5538
+
+	/// Daily gross profit / revenue (sample).
+	measure 'Gross Margin % (Sample)' = DIVIDE([Sample Gross Profit], [Sample Revenue])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: aeeffef0-db52-47a3-87df-8753dbbb50a6
+
+	/// Transactions / footfall (sample).
+	measure 'Conversion Rate % (Sample)' = DIVIDE([Sample Transactions], [Sample Footfall])
+		formatString: 0.0%
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: 0021adb4-bf75-4539-ae36-eaa960292590
+
+	/// Revenue per labour hour (sample).
+	measure 'Revenue per Staff Hour (Sample)' = DIVIDE([Sample Revenue], [Sample Staff Hours])
+		formatString: £0.00
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: 6b1bca15-8cef-4b4b-9aaa-eccb6b1a44ba
+
+	/// Average revenue per daily-sample record; the safe measure for comparing weekday, weekend and holiday trading because the sample is not a complete census.
+	measure 'Avg Revenue per Record (Sample)' = DIVIDE([Sample Revenue], [Sample Records])
+		formatString: £#,0
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: bfd433cc-bb1a-4d89-97bb-b08a998ec85d
+
+	/// Distinct sampled store-days as % of possible store-days (stores in scope x days in scope).
+	measure 'Sample Coverage %' = DIVIDE([Sample Store-Days], COUNTROWS(dim_store) * COUNTROWS(dim_date))
+		formatString: 0.0%
+		displayFolder: 02 KPI\Revenue Mix (Sample)
+		lineageTag: f212c43d-2adb-4f8a-ba8b-f65a04c1b271
+
+	/// Average revenue per record on weekends (sample).
+	measure 'Weekend Avg Revenue per Record' = CALCULATE([Avg Revenue per Record (Sample)], dim_date[is_weekend] = TRUE())
+		formatString: £#,0
+		displayFolder: 02 KPI\Calendar (Sample)
+		lineageTag: 4c19f70a-c91c-428e-bdeb-66061b8a2e9a
+
+	/// Average revenue per record on weekdays (sample).
+	measure 'Weekday Avg Revenue per Record' = CALCULATE([Avg Revenue per Record (Sample)], dim_date[is_weekend] = FALSE())
+		formatString: £#,0
+		displayFolder: 02 KPI\Calendar (Sample)
+		lineageTag: 9c31c075-2b63-4f3d-b069-50ddeb6c9cd6
+
+	/// Weekend average vs weekday average (sample).
+	measure 'Weekend Uplift %' =
+			VAR r = DIVIDE([Weekend Avg Revenue per Record], [Weekday Avg Revenue per Record])
+			RETURN IF(ISBLANK(r), BLANK(), r - 1)
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 02 KPI\Calendar (Sample)
+		lineageTag: 08d1c068-aa58-476b-a0d7-63b45b7fc2a4
+
+	/// Average revenue per record on England & Wales bank holidays (sample).
+	measure 'Bank Holiday Avg Revenue per Record' = CALCULATE([Avg Revenue per Record (Sample)], dim_date[is_uk_bank_holiday] = TRUE())
+		formatString: £#,0
+		displayFolder: 02 KPI\Calendar (Sample)
+		lineageTag: 3a1e7953-bceb-4187-9346-d8091ab69d0e
+
+	/// Average revenue per record on non-bank-holidays (sample).
+	measure 'Non-Bank-Holiday Avg Revenue per Record' = CALCULATE([Avg Revenue per Record (Sample)], dim_date[is_uk_bank_holiday] = FALSE())
+		formatString: £#,0
+		displayFolder: 02 KPI\Calendar (Sample)
+		lineageTag: e8307151-9bf4-4e7f-9085-c1f0ca4353b3
+
+	/// Bank-holiday average vs normal-day average (sample; only ~245 bank-holiday records).
+	measure 'Bank Holiday Uplift %' =
+			VAR r = DIVIDE([Bank Holiday Avg Revenue per Record], [Non-Bank-Holiday Avg Revenue per Record])
+			RETURN IF(ISBLANK(r), BLANK(), r - 1)
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 02 KPI\Calendar (Sample)
+		lineageTag: ee40a7f3-7b42-4a07-962f-8fd6a55a6732
+
+	/// Monthly revenue / average monthly revenue across the months in scope (1.00 = average month).
+	measure 'Revenue Seasonality Index' = DIVIDE([Total Revenue], AVERAGEX(ALLSELECTED(dim_date[month_number]), [Total Revenue]))
+		formatString: 0.00
+		displayFolder: 02 KPI\Calendar (Sample)
+		lineageTag: c22a032d-b523-4aca-a4e0-e06527dede93
+
+	/// ESTIMATE: member revenue x estate-average gross margin %. Assumes members buy at the same margin as everyone else (no member-level COGS exists).
+	measure 'Member Gross Profit (Est.)' = [Loyalty Member Revenue] * [Gross Margin %]
+		formatString: £#,0
+		displayFolder: 07 Loyalty Analytics\Net Value
+		lineageTag: 443d6bbe-9db3-4429-8b3b-c4b9bec69f88
+
+	/// ESTIMATE: estimated member gross profit minus redemption cost. Upper bound - member revenue is not proven incremental, so this is not programme ROI.
+	measure 'Loyalty Net Value (Est.)' = [Member Gross Profit (Est.)] - [Total Loyalty Redemption Cost]
+		formatString: £#,0;-£#,0
+		displayFolder: 07 Loyalty Analytics\Net Value
+		lineageTag: 3dc8a0ba-15a3-480c-83f5-d64f8aa79239
+
+	/// Estimated member gross profit per GBP of redemption cost (below 1.0x = programme costs more than the margin on member revenue).
+	measure 'Redemption Cover (x)' = DIVIDE([Member Gross Profit (Est.)], [Total Loyalty Redemption Cost])
+		formatString: 0.0"x"
+		displayFolder: 07 Loyalty Analytics\Net Value
+		lineageTag: 90d4e34d-65da-4f9a-a58a-989c8313e84f
+
+	/// Store-level Pearson correlation between loyalty adoption rate and loyalty member revenue %. Association only, not causation. Needs 3+ stores.
+	measure 'Corr - Adoption vs Member Revenue %' =
+			VAR T =
+			    FILTER(
+			        ADDCOLUMNS(
+			            VALUES(dim_store[store_id]),
+			            "@x", CALCULATE(MAX(dim_store[loyalty_adoption_rate])),
+			            "@y", [Loyalty Member Revenue %]
+			        ),
+			        NOT ISBLANK([@y])
+			    )
+			VAR N = COUNTROWS(T)
+			VAR MX = AVERAGEX(T, [@x])
+			VAR MY = AVERAGEX(T, [@y])
+			VAR SXY = SUMX(T, ([@x] - MX) * ([@y] - MY))
+			VAR SXX = SUMX(T, ([@x] - MX) ^ 2)
+			VAR SYY = SUMX(T, ([@y] - MY) ^ 2)
+			RETURN IF(N > 2, DIVIDE(SXY, SQRT(SXX * SYY)))
+		formatString: 0.00
+		displayFolder: 07 Loyalty Analytics\Correlation
+		lineageTag: f1237cf1-6cb4-425f-9211-21d50f96da82
+
+	/// Store-level Pearson correlation between average monthly rent and revenue per store-month.
+	measure 'Corr - Rent vs Revenue per Store-Month' =
+			VAR T =
+			    FILTER(
+			        ADDCOLUMNS(
+			            VALUES(dim_store[store_id]),
+			            "@x", [Avg Monthly Rent per Store],
+			            "@y", [Revenue per Store-Month]
+			        ),
+			        NOT ISBLANK([@x]) && NOT ISBLANK([@y])
+			    )
+			VAR N = COUNTROWS(T)
+			VAR MX = AVERAGEX(T, [@x])
+			VAR MY = AVERAGEX(T, [@y])
+			VAR SXY = SUMX(T, ([@x] - MX) * ([@y] - MY))
+			VAR SXX = SUMX(T, ([@x] - MX) ^ 2)
+			VAR SYY = SUMX(T, ([@y] - MY) ^ 2)
+			RETURN IF(N > 2, DIVIDE(SXY, SQRT(SXX * SYY)))
+		formatString: 0.00
+		displayFolder: 07 Loyalty Analytics\Correlation
+		lineageTag: 4337d85a-aaef-4f12-b981-3679235940ca
+
+	/// Store-level Pearson correlation between average monthly rent and net profit margin.
+	measure 'Corr - Rent vs Net Profit Margin %' =
+			VAR T =
+			    FILTER(
+			        ADDCOLUMNS(
+			            VALUES(dim_store[store_id]),
+			            "@x", [Avg Monthly Rent per Store],
+			            "@y", [Net Profit Margin %]
+			        ),
+			        NOT ISBLANK([@x]) && NOT ISBLANK([@y])
+			    )
+			VAR N = COUNTROWS(T)
+			VAR MX = AVERAGEX(T, [@x])
+			VAR MY = AVERAGEX(T, [@y])
+			VAR SXY = SUMX(T, ([@x] - MX) * ([@y] - MY))
+			VAR SXX = SUMX(T, ([@x] - MX) ^ 2)
+			VAR SYY = SUMX(T, ([@y] - MY) ^ 2)
+			RETURN IF(N > 2, DIVIDE(SXY, SQRT(SXX * SYY)))
+		formatString: 0.00
+		displayFolder: 07 Loyalty Analytics\Correlation
+		lineageTag: 6701af1f-36e2-4478-85d3-c1c6ad291c10
+
+	/// Prior-year revenue (same filters, year replaced by selected year - 1). BLANK unless one year is selected.
+	measure 'PY Revenue' = ```
+			
+			VAR PYr = [Prior Year]
+			RETURN 
+			    IF(ISBLANK(PYr), BLANK(), CALCULATE([Total Revenue], dim_date[year] = PYr))
+			```
+		formatString: £#,0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 37669d77-f36e-40bf-9728-3aefcc50f380
+
+	/// Prior-year net profit.
+	measure 'PY Net Profit' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Total Net Profit], dim_date[year] = PYr))
+		formatString: £#,0;-£#,0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 7c3bb193-de95-4c6a-8449-18300c7110f7
+
+	/// Prior-year weighted net margin.
+	measure 'PY Net Profit Margin %' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Net Profit Margin %], dim_date[year] = PYr))
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: a8418bf5-5324-4d45-9703-e15442c529e2
+
+	/// Prior-year loss-making store-month share.
+	measure 'PY Loss-Making Store-Months %' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Loss-Making Store-Months %], dim_date[year] = PYr))
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 233fd3b2-ad86-4a7d-aaa4-2ff589fbb326
+
+	/// Prior-year loyalty member revenue share.
+	measure 'PY Loyalty Member Revenue %' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Loyalty Member Revenue %], dim_date[year] = PYr))
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: a6138b64-4d2a-47bc-bdf0-8c28eb647879
+
+	/// Prior-year redemption cost.
+	measure 'PY Total Loyalty Redemption Cost' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Total Loyalty Redemption Cost], dim_date[year] = PYr))
+		formatString: £#,0
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 5ff11fef-76af-4d08-8594-583db78fb7b2
+
+	/// Prior-year redemption cost % of member revenue.
+	measure 'PY Redemption Cost % of Member Revenue' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Redemption Cost % of Member Revenue], dim_date[year] = PYr))
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 97318c39-607b-4329-bee2-3d68c90879fd
+
+	/// Prior-year food share of revenue (sample).
+	measure 'PY Food Share %' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Food Share %], dim_date[year] = PYr))
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: b76f30c1-a264-491d-b3ad-42539130c71d
+
+	/// Prior-year retail beans share of revenue (sample).
+	measure 'PY Retail Beans Share %' =
+			VAR PYr = [Prior Year]
+			RETURN IF(ISBLANK(PYr), BLANK(), CALCULATE([Retail Beans Share %], dim_date[year] = PYr))
+		formatString: 0.0%
+		displayFolder: 03 Time Intelligence\Prior Year
+		lineageTag: 97eace2f-e87e-4e3c-9d41-5e7135d18605
+
+	/// Revenue growth vs prior year.
+	measure 'Revenue YoY %' = DIVIDE([Total Revenue] - [PY Revenue], [PY Revenue])
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 527a4f9f-7ef1-4086-bc6b-fb016f1fb8ff
+
+	/// Revenue change vs prior year in GBP.
+	measure 'Revenue YoY £' = IF(ISBLANK([PY Revenue]), BLANK(), [Total Revenue] - [PY Revenue])
+		formatString: +£#,0;-£#,0;£0
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 2a48cbf6-a0c4-4e54-9cdc-01cd502923d9
+
+	/// Net profit growth vs prior year. Denominator uses ABS(prior) so a store moving from loss to profit shows a positive %.
+	measure 'Net Profit YoY %' = DIVIDE([Total Net Profit] - [PY Net Profit], ABS([PY Net Profit]))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 6031804c-ce9f-4c37-a48f-616ff0188b3b
+
+	/// Net profit change vs prior year in GBP (used to find most improved / most deteriorated stores).
+	measure 'Net Profit YoY £' = IF(ISBLANK([PY Net Profit]), BLANK(), [Total Net Profit] - [PY Net Profit])
+		formatString: +£#,0;-£#,0;£0
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 23689aff-47d5-4687-b3ce-c39b599196e8
+
+	/// Change in net margin vs prior year, in percentage points.
+	measure 'Net Profit Margin YoY (pp)' = IF(ISBLANK([PY Net Profit Margin %]), BLANK(), ([Net Profit Margin %] - [PY Net Profit Margin %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 7675beef-a560-46f3-be69-2f3ce8b1d79f
+
+	/// Change in loss-making store-month share vs prior year (pp).
+	measure 'Loss-Making Share YoY (pp)' = IF(ISBLANK([PY Loss-Making Store-Months %]), BLANK(), ([Loss-Making Store-Months %] - [PY Loss-Making Store-Months %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: cf5f4e8c-308a-45f0-82c5-5d9b19e546e3
+
+	/// Change in loyalty member revenue share vs prior year (pp).
+	measure 'Member Revenue % YoY (pp)' = IF(ISBLANK([PY Loyalty Member Revenue %]), BLANK(), ([Loyalty Member Revenue %] - [PY Loyalty Member Revenue %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: dd9e8c90-fbec-4994-b565-62000d679c33
+
+	/// Redemption cost growth vs prior year.
+	measure 'Redemption Cost YoY %' = DIVIDE([Total Loyalty Redemption Cost] - [PY Total Loyalty Redemption Cost], [PY Total Loyalty Redemption Cost])
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 9053e31e-2ee1-4e2a-ab89-0c25510302a9
+
+	/// Change in redemption cost % of member revenue vs prior year (pp).
+	measure 'Redemption Cost % YoY (pp)' = IF(ISBLANK([PY Redemption Cost % of Member Revenue]), BLANK(), ([Redemption Cost % of Member Revenue] - [PY Redemption Cost % of Member Revenue]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: ee300cb7-4d03-4b73-8f9e-06beb1eef68d
+
+	/// Change in food share vs prior year (pp, sample).
+	measure 'Food Share YoY (pp)' = IF(ISBLANK([PY Food Share %]), BLANK(), ([Food Share %] - [PY Food Share %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 84d231b9-4942-4e31-a8e3-a187cf971b66
+
+	/// Change in retail beans share vs prior year (pp, sample).
+	measure 'Retail Beans Share YoY (pp)' = IF(ISBLANK([PY Retail Beans Share %]), BLANK(), ([Retail Beans Share %] - [PY Retail Beans Share %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 03 Time Intelligence\Growth & Variance
+		lineageTag: 87c053be-1b5f-4e2b-9e61-75a7af7c32c9
+
+	/// Revenue of the previous calendar month. Needs one year and one month in context (e.g. month on a chart axis).
+	measure 'Prior Month Revenue' =
+			VAR Y = SELECTEDVALUE(dim_date[year])
+			VAR M = SELECTEDVALUE(dim_date[month_number])
+			VAR Idx = IF(ISBLANK(Y) || ISBLANK(M), BLANK(), Y * 12 + M)
+			RETURN
+			IF(ISBLANK(Idx), BLANK(),
+			    CALCULATE([Total Revenue], REMOVEFILTERS(dim_date),
+			        FILTER(ALL(dim_date[year], dim_date[month_number]), dim_date[year] * 12 + dim_date[month_number] = Idx - 1)))
+		formatString: £#,0
+		displayFolder: 03 Time Intelligence\Month over Month
+		lineageTag: fff93cf0-ed73-4487-b000-a34281fceea1
+
+	/// Month-over-month revenue growth.
+	measure 'Revenue MoM %' = DIVIDE([Total Revenue] - [Prior Month Revenue], [Prior Month Revenue])
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 03 Time Intelligence\Month over Month
+		lineageTag: b8ebfa49-9137-4343-9c92-622952bfd832
+
+	/// Net profit of the previous calendar month.
+	measure 'Prior Month Net Profit' =
+			VAR Y = SELECTEDVALUE(dim_date[year])
+			VAR M = SELECTEDVALUE(dim_date[month_number])
+			VAR Idx = IF(ISBLANK(Y) || ISBLANK(M), BLANK(), Y * 12 + M)
+			RETURN
+			IF(ISBLANK(Idx), BLANK(),
+			    CALCULATE([Total Net Profit], REMOVEFILTERS(dim_date),
+			        FILTER(ALL(dim_date[year], dim_date[month_number]), dim_date[year] * 12 + dim_date[month_number] = Idx - 1)))
+		formatString: £#,0;-£#,0
+		displayFolder: 03 Time Intelligence\Month over Month
+		lineageTag: 6041689a-2da0-4ebe-91fd-bf0aee54d993
+
+	/// Month-over-month net profit growth (ABS denominator).
+	measure 'Net Profit MoM %' = DIVIDE([Total Net Profit] - [Prior Month Net Profit], ABS([Prior Month Net Profit]))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 03 Time Intelligence\Month over Month
+		lineageTag: ee84fb8e-3c67-4764-b1ac-78ef0012288b
+
+	/// Selection margin minus whole-estate margin, in percentage points.
+	measure 'Margin vs Estate (pp)' = IF(ISBLANK([Net Profit Margin %]), BLANK(), ([Net Profit Margin %] - [Estate Net Profit Margin %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 05 Comparison\vs Estate
+		lineageTag: 86ea914f-460e-48fc-950b-e9a7f5cc90de
+
+	/// Rent % of revenue minus estate rent % (pp). Positive = heavier rent burden than estate.
+	measure 'Rent % vs Estate (pp)' = IF(ISBLANK([Rent % of Revenue]), BLANK(), ([Rent % of Revenue] - [Estate Rent % of Revenue]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 05 Comparison\vs Estate
+		lineageTag: 97a78d60-c205-452e-839e-76adc7faa835
+
+	/// Member revenue share minus estate share (pp).
+	measure 'Member Revenue % vs Estate (pp)' = IF(ISBLANK([Loyalty Member Revenue %]), BLANK(), ([Loyalty Member Revenue %] - [Estate Loyalty Member Revenue %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 05 Comparison\vs Estate
+		lineageTag: 84f27fb8-c49e-47e8-9923-9aed423ce4e1
+
+	/// Redemption cost % of member revenue minus estate (pp). Positive = costlier programme than estate.
+	measure 'Redemption Cost % vs Estate (pp)' = IF(ISBLANK([Redemption Cost % of Member Revenue]), BLANK(), ([Redemption Cost % of Member Revenue] - [Estate Redemption Cost % of Member Revenue]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 05 Comparison\vs Estate
+		lineageTag: 1eba0932-b9a0-46c8-8c51-a03a718e5e07
+
+	/// Loss-making store-month share minus estate share (pp).
+	measure 'Loss-Making Share vs Estate (pp)' = IF(ISBLANK([Loss-Making Store-Months %]), BLANK(), ([Loss-Making Store-Months %] - [Estate Loss-Making Store-Months %]) * 100)
+		formatString: +0.0" pp";-0.0" pp";0.0" pp"
+		displayFolder: 05 Comparison\vs Estate
+		lineageTag: 641d29a3-8504-4c30-a433-232e67fc67a4
+
+	/// Share of estate revenue contributed by the selection (store/region filters removed in the denominator).
+	measure 'Revenue Contribution %' = DIVIDE([Total Revenue], CALCULATE([Total Revenue], REMOVEFILTERS(dim_store)))
+		formatString: 0.0%
+		displayFolder: 05 Comparison\vs Estate
+		lineageTag: ac1039cf-ae72-49f9-827b-2bb90a967f41
+
+	/// Share of estate net profit contributed by the selection (negative for loss-making stores).
+	measure 'Net Profit Contribution %' = DIVIDE([Total Net Profit], CALCULATE([Total Net Profit], REMOVEFILTERS(dim_store)))
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: 05 Comparison\vs Estate
+		lineageTag: 27995e1a-2cc9-423d-b912-e28ddff4e417
+
+	/// Status derived from weighted margin using the DOCUMENTED thresholds (stored profitability_status bands overlap and are not used): >20% Highly-Profitable, 8-20% Profitable, -2-8% Break-Even, -15 to -2% Loss-Making, <-15% Structural-Loss.
+	measure 'Derived Profitability Status' =
+			VAR M = [Net Profit Margin %]
+			RETURN
+			IF(ISBLANK(M), BLANK(),
+			    SWITCH(TRUE(),
+			        M > 0.20, "Highly-Profitable",
+			        M >= 0.08, "Profitable",
+			        M >= -0.02, "Break-Even",
+			        M >= -0.15, "Loss-Making",
+			        "Structural-Loss"))
+		displayFolder: 06 Store Status & Risk\Status
+		lineageTag: d405b0cf-50b6-41b9-9f88-aaa33df0def4
+
+	/// Sort order for the derived status (1 = best, 5 = worst).
+	measure 'Derived Status Order' = SWITCH([Derived Profitability Status], "Highly-Profitable", 1, "Profitable", 2, "Break-Even", 3, "Loss-Making", 4, "Structural-Loss", 5, BLANK())
+		formatString: 0
+		displayFolder: 06 Store Status & Risk\Status
+		lineageTag: 571a33c6-1c47-4810-9e46-487c19e2590f
+
+	/// Review = Loss-Making or Structural-Loss; Watch = Break-Even; OK otherwise.
+	measure 'Review Flag' = SWITCH([Derived Profitability Status], "Loss-Making", "Review", "Structural-Loss", "Review", "Break-Even", "Watch", BLANK(), BLANK(), "OK")
+		displayFolder: 06 Store Status & Risk\Status
+		lineageTag: 6113bfa8-0403-4b09-b5b2-224d471e4471
+
+	/// Stores whose margin for the selected period is above 20%.
+	measure 'Stores - Highly-Profitable' = COUNTROWS(FILTER(VALUES(dim_store[store_id]), VAR m = [Net Profit Margin %] RETURN NOT ISBLANK(m) && m > 0.20)) + 0
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: 44200b8d-9a7b-4a95-bbc8-b953cf21a283
+
+	/// Stores with margin 8% to 20%.
+	measure 'Stores - Profitable' = COUNTROWS(FILTER(VALUES(dim_store[store_id]), VAR m = [Net Profit Margin %] RETURN NOT ISBLANK(m) && m >= 0.08 && m <= 0.20)) + 0
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: 23152532-ec03-4d98-8352-84a062cebb65
+
+	/// Stores with margin -2% to 8%.
+	measure 'Stores - Break-Even' = COUNTROWS(FILTER(VALUES(dim_store[store_id]), VAR m = [Net Profit Margin %] RETURN NOT ISBLANK(m) && m >= -0.02 && m < 0.08)) + 0
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: 273c073e-450a-4182-aa63-fc167e8374d5
+
+	/// Stores with margin -15% to -2%.
+	measure 'Stores - Loss-Making' = COUNTROWS(FILTER(VALUES(dim_store[store_id]), VAR m = [Net Profit Margin %] RETURN NOT ISBLANK(m) && m >= -0.15 && m < -0.02)) + 0
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: d2c0ed51-9bdc-4e79-b131-fa3e300af5f5
+
+	/// Stores with margin below -15%.
+	measure 'Stores - Structural-Loss' = COUNTROWS(FILTER(VALUES(dim_store[store_id]), VAR m = [Net Profit Margin %] RETURN NOT ISBLANK(m) && m < -0.15)) + 0
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: 586f6063-a9a0-4798-b842-22b524d2c436
+
+	/// Stores to review = Loss-Making + Structural-Loss for the selected period.
+	measure 'Stores to Review' = [Stores - Loss-Making] + [Stores - Structural-Loss]
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: 225bda7a-2dff-4997-a015-16a44d8fc965
+
+	/// Stores not currently Active (Temporarily-Closed or Refurbishing). store_status is a current snapshot with no closure date.
+	measure 'Stores Not Active' = CALCULATE(COUNTROWS(dim_store), dim_store[store_status] <> "Active") + 0
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: cfdb7363-8485-41dc-ae6c-404d46b56a55
+
+	/// Revenue booked by stores that are not currently Active.
+	measure 'Revenue from Non-Active Stores' = CALCULATE([Total Revenue], dim_store[store_status] <> "Active")
+		formatString: £#,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: ddce92cd-f45e-4890-8392-c47ca0d7c8a6
+
+	/// Store-months carrying a stored Loss-Making or Structural-Loss label (compare with Loss-Making Store-Months, which uses the actual sign).
+	measure 'Store-Months Flagged Loss (Stored Status)' = CALCULATE(COUNTROWS(fact_store_monthly_profitability), fact_store_monthly_profitability[profitability_status] IN {"Loss-Making", "Structural-Loss"}) + 0
+		formatString: #,0
+		displayFolder: 06 Store Status & Risk\Counts
+		lineageTag: 24bd43c2-3a63-4fcd-9535-779cf42c8c5f
+
+	/// Readable period for titles: single year, or 'first to last year'; adds quarter or month when one is selected.
+	measure 'Label - Period' =
+			VAR Base = IF(HASONEVALUE(dim_date[year]), FORMAT(SELECTEDVALUE(dim_date[year]), "0"), FORMAT(MIN(dim_date[year]), "0") & " to " & FORMAT(MAX(dim_date[year]), "0"))
+			VAR MTxt = IF(ISFILTERED(dim_date[month_name]) && HASONEVALUE(dim_date[month_name]), " " & SELECTEDVALUE(dim_date[month_name]), "")
+			VAR QTxt = IF(ISFILTERED(dim_date[quarter]) && HASONEVALUE(dim_date[quarter]), " Q" & FORMAT(SELECTEDVALUE(dim_date[quarter]), "0"), "")
+			RETURN Base & IF(MTxt <> "", MTxt, QTxt)
+		displayFolder: 00 Helpers\Labels
+		lineageTag: de64026f-8cdb-457b-ad54-0d132777405b
+
+	/// Selected region, 'n regions' for a multi-select, or 'All regions'.
+	measure 'Label - Region' = IF(ISFILTERED(dim_store[region]), IF(HASONEVALUE(dim_store[region]), SELECTEDVALUE(dim_store[region]), FORMAT(COUNTROWS(VALUES(dim_store[region])), "0") & " regions"), "All regions")
+		displayFolder: 00 Helpers\Labels
+		lineageTag: 11e997dc-82f0-4f4c-9bec-e28404bd99d4
+
+	/// Selected location type or 'All location types'.
+	measure 'Label - Location Type' = IF(ISFILTERED(dim_store[location_type]), IF(HASONEVALUE(dim_store[location_type]), SELECTEDVALUE(dim_store[location_type]), FORMAT(COUNTROWS(VALUES(dim_store[location_type])), "0") & " location types"), "All location types")
+		displayFolder: 00 Helpers\Labels
+		lineageTag: e862b450-c265-4a89-8f39-af57a3363528
+
+	/// Store name when one store is in context, else 'n stores'.
+	measure 'Label - Store' = IF(HASONEVALUE(dim_store[store_name]), SELECTEDVALUE(dim_store[store_name]), FORMAT([Store Count], "0") & " stores")
+		displayFolder: 00 Helpers\Labels
+		lineageTag: cb9b2546-ec6f-4788-b281-150fbacde7cf
+
+	/// Combined region and location-type scope for page subtitles.
+	measure 'Label - Scope' = [Label - Region] & " | " & [Label - Location Type]
+		displayFolder: 00 Helpers\Labels
+		lineageTag: 6bd4be5d-f837-41d0-aa85-b162c82748ca
+
+	/// Revenue as adaptive text (GBP K or M).
+	measure 'Txt - Revenue' =
+			VAR v = [Total Revenue]
+			RETURN IF(ISBLANK(v), "n/a", IF(ABS(v) >= 1000000, FORMAT(v / 1000000, "£#,0.0") & "M", IF(ABS(v) >= 1000, FORMAT(v / 1000, "£#,0") & "K", FORMAT(v, "£#,0"))))
+		displayFolder: 00 Helpers\Text Formatting
+		lineageTag: 24b9f1c0-2d21-4ed8-969c-3eac344a5cf5
+
+	/// Net profit as adaptive text.
+	measure 'Txt - Net Profit' =
+			VAR v = [Total Net Profit]
+			RETURN IF(ISBLANK(v), "n/a", IF(ABS(v) >= 1000000, FORMAT(v / 1000000, "£#,0.0") & "M", IF(ABS(v) >= 1000, FORMAT(v / 1000, "£#,0") & "K", FORMAT(v, "£#,0"))))
+		displayFolder: 00 Helpers\Text Formatting
+		lineageTag: 890cfee8-6569-4826-95ad-73ba10f7ad29
+
+	/// Signed net profit change vs prior year as adaptive text.
+	measure 'Txt - Net Profit Change' =
+			VAR v = [Net Profit YoY £]
+			VAR a = ABS(v)
+			RETURN IF(ISBLANK(v), BLANK(), IF(v >= 0, "+", "-") & IF(a >= 1000000, FORMAT(a / 1000000, "£#,0.0") & "M", IF(a >= 1000, FORMAT(a / 1000, "£#,0") & "K", FORMAT(a, "£#,0"))))
+		displayFolder: 00 Helpers\Text Formatting
+		lineageTag: 043179c0-e41b-4bf1-b230-90f090aa126f
+
+	/// Loyalty redemption cost as adaptive text.
+	measure 'Txt - Redemption Cost' =
+			VAR v = [Total Loyalty Redemption Cost]
+			RETURN IF(ISBLANK(v), "n/a", IF(ABS(v) >= 1000000, FORMAT(v / 1000000, "£#,0.0") & "M", IF(ABS(v) >= 1000, FORMAT(v / 1000, "£#,0") & "K", FORMAT(v, "£#,0"))))
+		displayFolder: 00 Helpers\Text Formatting
+		lineageTag: bd013080-3983-426a-b286-074cfe64937f
+
+	/// Estimated loyalty net value as adaptive text.
+	measure 'Txt - Loyalty Net Value' =
+			VAR v = [Loyalty Net Value (Est.)]
+			RETURN IF(ISBLANK(v), "n/a", IF(ABS(v) >= 1000000, FORMAT(v / 1000000, "£#,0.0") & "M", IF(ABS(v) >= 1000, FORMAT(v / 1000, "£#,0") & "K", FORMAT(v, "£#,0"))))
+		displayFolder: 00 Helpers\Text Formatting
+		lineageTag: 96cd3b94-db0b-4078-8ad8-692dfcd8b0dc
+
+	/// Absolute net loss in loss-making months as adaptive text (e.g. 662K).
+	measure 'Txt - Net Loss' =
+			VAR v = ABS([Net Loss in Loss-Making Months])
+			RETURN IF(ISBLANK(v), "n/a", IF(v >= 1000000, FORMAT(v / 1000000, "£#,0.0") & "M", IF(v >= 1000, FORMAT(v / 1000, "£#,0") & "K", FORMAT(v, "£#,0"))))
+		displayFolder: 00 Helpers\Text Formatting
+		lineageTag: b589e5a1-e5f4-4d67-b2f1-7bb181fb9a21
+
+	/// Rank of the store by net profit (1 = highest). Only evaluates when one store is in context.
+	measure 'Rank - Store Net Profit' = IF(HASONEVALUE(dim_store[store_name]), RANKX(ALLSELECTED(dim_store[store_name]), [Total Net Profit], , DESC, DENSE))
+		formatString: "#"0
+		displayFolder: 04 Ranking\Rank
+		lineageTag: 9dafcebd-cdf8-4268-90d3-2e422362b290
+
+	/// Rank of the store by weighted net margin (1 = highest).
+	measure 'Rank - Store Margin' = IF(HASONEVALUE(dim_store[store_name]), RANKX(ALLSELECTED(dim_store[store_name]), [Net Profit Margin %], , DESC, DENSE))
+		formatString: "#"0
+		displayFolder: 04 Ranking\Rank
+		lineageTag: 22b969b1-ae0e-4eb7-bc60-9a4b9aba903f
+
+	/// Rank of the store by net profit improvement vs prior year (1 = biggest improvement).
+	measure 'Rank - Store Net Profit YoY (Improvers)' = IF(HASONEVALUE(dim_store[store_name]) && NOT ISBLANK([Net Profit YoY £]), RANKX(ALLSELECTED(dim_store[store_name]), [Net Profit YoY £], , DESC, DENSE))
+		formatString: "#"0
+		displayFolder: 04 Ranking\Rank
+		lineageTag: 7aac63b1-0dc4-4401-bef8-a8138f5549b8
+
+	/// Rank of the store by net profit decline vs prior year (1 = biggest deterioration).
+	measure 'Rank - Store Net Profit YoY (Decliners)' = IF(HASONEVALUE(dim_store[store_name]) && NOT ISBLANK([Net Profit YoY £]), RANKX(ALLSELECTED(dim_store[store_name]), [Net Profit YoY £], , ASC, DENSE))
+		formatString: "#"0
+		displayFolder: 04 Ranking\Rank
+		lineageTag: 4b5a5bf3-8f57-4d92-8208-8f66bc5c6859
+
+	/// Rank of the region by weighted net margin (1 = highest).
+	measure 'Rank - Region Margin' = IF(HASONEVALUE(dim_store[region]), RANKX(ALLSELECTED(dim_store[region]), [Net Profit Margin %], , DESC, DENSE))
+		formatString: "#"0
+		displayFolder: 04 Ranking\Rank
+		lineageTag: fa5368c1-9ca4-4918-9a0c-62c339cea283
+
+	/// 1 for the 5 highest and 5 lowest stores by net profit - use as a visual-level filter (is 1) for a Top & Bottom 5 chart.
+	measure 'Flag - Top & Bottom 5 Stores (Net Profit)' =
+			IF(HASONEVALUE(dim_store[store_name]),
+			    VAR N = COUNTROWS(ALLSELECTED(dim_store[store_name]))
+			    VAR R = [Rank - Store Net Profit]
+			    RETURN IF(R <= 5 || R > N - 5, 1, 0))
+		formatString: 0
+		displayFolder: 04 Ranking\Chart Filters
+		lineageTag: 4f7a880d-ee91-4a8b-b446-7777eeabcec9
+
+	/// 1 for the 5 biggest improvers and 5 biggest decliners vs prior year - visual-level filter (is 1).
+	measure 'Flag - Top & Bottom 5 Movers (YoY)' =
+			IF(HASONEVALUE(dim_store[store_name]) && NOT ISBLANK([Net Profit YoY £]),
+			    IF([Rank - Store Net Profit YoY (Improvers)] <= 5 || [Rank - Store Net Profit YoY (Decliners)] <= 5, 1, 0))
+		formatString: 0
+		displayFolder: 04 Ranking\Chart Filters
+		lineageTag: 528759b6-36ae-4a04-b02d-1e6ee20a7522
+
+	/// Store with the highest net profit in the current selection.
+	measure 'Top Store (Net Profit)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[store_name]), [Total Net Profit], DESC), dim_store[store_name], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 031a72ef-0664-4f2b-9536-cd0587fb1c4e
+
+	/// Net profit of the top store.
+	measure 'Top Store Net Profit' = MAXX(ALLSELECTED(dim_store[store_name]), [Total Net Profit])
+		formatString: £#,0;-£#,0
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 89e5e32e-58f0-49af-8723-6074ca6c02fa
+
+	/// Store with the lowest net profit in the current selection.
+	measure 'Bottom Store (Net Profit)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[store_name]), [Total Net Profit], ASC), dim_store[store_name], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 1b06515e-d1ab-45fd-8ff9-ed4a8a18a380
+
+	/// Net profit of the bottom store.
+	measure 'Bottom Store Net Profit' = MINX(ALLSELECTED(dim_store[store_name]), [Total Net Profit])
+		formatString: £#,0;-£#,0
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: b501b6f6-2c59-498e-a49d-0c960956dfff
+
+	/// Store with the highest weighted margin.
+	measure 'Top Store (Margin)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[store_name]), [Net Profit Margin %], DESC), dim_store[store_name], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 5ab9eb43-a4e9-46c9-ab5c-8d4c836cf351
+
+	/// Store with the lowest weighted margin.
+	measure 'Bottom Store (Margin)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[store_name]), [Net Profit Margin %], ASC), dim_store[store_name], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 2e380529-9121-4581-a80c-810e2ab38348
+
+	/// Store whose net profit rose most vs prior year. BLANK unless one year is selected.
+	measure 'Most Improved Store' = IF(ISBLANK([Prior Year]), BLANK(), CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[store_name]), [Net Profit YoY £], DESC), dim_store[store_name], ", "))
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 4265727f-f16c-4f2d-99ec-4af526839c29
+
+	/// GBP improvement of the most improved store.
+	measure 'Most Improved Store YoY £' = IF(ISBLANK([Prior Year]), BLANK(), MAXX(ALLSELECTED(dim_store[store_name]), [Net Profit YoY £]))
+		formatString: +£#,0;-£#,0;£0
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 9ac89943-2778-4b19-a651-7926a67fa0c8
+
+	/// Store whose net profit fell most vs prior year.
+	measure 'Most Deteriorated Store' = IF(ISBLANK([Prior Year]), BLANK(), CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[store_name]), [Net Profit YoY £], ASC), dim_store[store_name], ", "))
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 9f17d0bc-7725-4472-bfc7-c193e19e3597
+
+	/// GBP decline of the most deteriorated store.
+	measure 'Most Deteriorated Store YoY £' = IF(ISBLANK([Prior Year]), BLANK(), MINX(ALLSELECTED(dim_store[store_name]), [Net Profit YoY £]))
+		formatString: +£#,0;-£#,0;£0
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 725a1f3e-0596-4d8b-9eec-94149aeae583
+
+	/// Region with the highest weighted net margin.
+	measure 'Top Region (Margin)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[region]), [Net Profit Margin %], DESC), dim_store[region], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 5a7c2591-247d-46c3-bee1-bfe247a0ff96
+
+	/// Highest regional margin.
+	measure 'Top Region Margin %' = MAXX(ALLSELECTED(dim_store[region]), [Net Profit Margin %])
+		formatString: 0.0%
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: c3c941b3-b5ad-4166-b6c9-4d55cb7d8974
+
+	/// Region with the lowest weighted net margin.
+	measure 'Bottom Region (Margin)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[region]), [Net Profit Margin %], ASC), dim_store[region], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 04653fb7-a733-49b6-8bf1-5521a40e6804
+
+	/// Lowest regional margin.
+	measure 'Bottom Region Margin %' = MINX(ALLSELECTED(dim_store[region]), [Net Profit Margin %])
+		formatString: 0.0%
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 20396366-61e6-43e6-a7fa-8706ac6b2cf3
+
+	/// Region with the biggest net profit gain vs prior year.
+	measure 'Top Region (Net Profit YoY £)' = IF(ISBLANK([Prior Year]), BLANK(), CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[region]), [Net Profit YoY £], DESC), dim_store[region], ", "))
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: c8222540-72e3-4cd2-a0a1-e39bdec5e2d0
+
+	/// GBP gain of the top-growth region.
+	measure 'Top Region Net Profit YoY £' = IF(ISBLANK([Prior Year]), BLANK(), MAXX(ALLSELECTED(dim_store[region]), [Net Profit YoY £]))
+		formatString: +£#,0;-£#,0;£0
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 73ea9ad5-b0b2-40a2-ba24-023bb690f0d0
+
+	/// Region with the biggest net profit decline vs prior year.
+	measure 'Bottom Region (Net Profit YoY £)' = IF(ISBLANK([Prior Year]), BLANK(), CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[region]), [Net Profit YoY £], ASC), dim_store[region], ", "))
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: cc69f560-2b84-4435-893b-5cccc434ef73
+
+	/// GBP decline of the weakest-growth region.
+	measure 'Bottom Region Net Profit YoY £' = IF(ISBLANK([Prior Year]), BLANK(), MINX(ALLSELECTED(dim_store[region]), [Net Profit YoY £]))
+		formatString: +£#,0;-£#,0;£0
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 84fdc2fe-62aa-4464-8891-e31e409656ef
+
+	/// Location type with the highest weighted margin.
+	measure 'Top Location Type (Margin)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[location_type]), [Net Profit Margin %], DESC), dim_store[location_type], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 9397cce1-6846-416c-bed1-321f941c6b6c
+
+	/// Location type with the lowest weighted margin.
+	measure 'Bottom Location Type (Margin)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[location_type]), [Net Profit Margin %], ASC), dim_store[location_type], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 1b8a6d44-8922-4608-bc8f-611c90c4e67a
+
+	/// Region with the highest share of loss-making store-months.
+	measure 'Highest Loss Share Region' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[region]), [Loss-Making Store-Months %], DESC), dim_store[region], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: cf4d593b-c64f-467b-86d7-71f1b7a51697
+
+	/// Highest regional loss-making store-month share.
+	measure 'Highest Region Loss Share %' = MAXX(ALLSELECTED(dim_store[region]), [Loss-Making Store-Months %])
+		formatString: 0.0%
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 6367a5f3-6743-4a75-9474-1eb8516f575d
+
+	/// Region with the highest loyalty member revenue share.
+	measure 'Top Region (Member Revenue %)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[region]), [Loyalty Member Revenue %], DESC), dim_store[region], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: b7cf7a48-11f3-4e6b-9c7a-9eca53a2a073
+
+	/// Region with the lowest loyalty member revenue share.
+	measure 'Bottom Region (Member Revenue %)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_store[region]), [Loyalty Member Revenue %], ASC), dim_store[region], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 6ee0e1d4-0031-4ad8-899d-b9fc2d96739e
+
+	/// Calendar month with the highest estate net profit in the selection.
+	measure 'Peak Month (Net Profit)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_date[month_number], dim_date[month_name]), [Total Net Profit], DESC), dim_date[month_name], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 2f4dc37a-3540-4f17-8df4-e6e442eb443f
+
+	/// Calendar month with the lowest estate net profit in the selection.
+	measure 'Lowest Month (Net Profit)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_date[month_number], dim_date[month_name]), [Total Net Profit], ASC), dim_date[month_name], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 0a46c764-a8a7-485a-a357-9a886094e388
+
+	/// Quarter with the highest revenue in the selection.
+	measure 'Peak Quarter (Revenue)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_date[quarter]), [Total Revenue], DESC), "Q" & FORMAT(dim_date[quarter], "0"), ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: ba9bc12c-ced8-42e5-981b-d191f7f87d39
+
+	/// Quarter with the lowest revenue in the selection.
+	measure 'Lowest Quarter (Revenue)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_date[quarter]), [Total Revenue], ASC), "Q" & FORMAT(dim_date[quarter], "0"), ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 3859dd96-fca5-446a-8ce3-4b590508b5eb
+
+	/// Day of week with the highest average revenue per sample record.
+	measure 'Peak Day (Sample)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_date[day_of_week]), [Avg Revenue per Record (Sample)], DESC), dim_date[day_of_week], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 71e278d3-14ea-42d8-af66-8353edae543a
+
+	/// Day of week with the lowest average revenue per sample record.
+	measure 'Lowest Day (Sample)' = CONCATENATEX(TOPN(1, ALLSELECTED(dim_date[day_of_week]), [Avg Revenue per Record (Sample)], ASC), dim_date[day_of_week], ", ")
+		displayFolder: 04 Ranking\Top & Bottom
+		lineageTag: 17f6fa47-83f7-49fc-8118-522b7dd8c7f1
+
+	/// Font/data colour: revenue growth vs prior year. Green > +1%, red < -1%, grey otherwise or no comparison.
+	measure 'CF - Revenue YoY Color' = ```
+			
+			VAR x = [Revenue YoY %]
+			RETURN 
+			    IF(ISBLANK(x), "#808080", IF(x > 0.01, "#2E8B57", IF(x < -0.01, "#D64550", "#808080")))
+			```
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 11261b37-d35c-47cc-97e4-37f042b33075
+
+	/// Font/data colour: net profit growth vs prior year (+/-1% neutral band).
+	measure 'CF - Net Profit YoY Color' =
+			VAR x = [Net Profit YoY %]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 0.01, "#2E8B57", IF(x < -0.01, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 78d46530-a4e3-4412-bc14-af1dcffc4913
+
+	/// Font/data colour: margin change in pp (+/-0.5 pp neutral band).
+	measure 'CF - Margin YoY Color' =
+			VAR x = [Net Profit Margin YoY (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 0.5, "#2E8B57", IF(x < -0.5, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: cf9f7fe2-d617-4ecb-9d84-d7dc0f0360c8
+
+	/// Font/data colour: loss-making share vs prior year (LOWER is better).
+	measure 'CF - Loss Share YoY Color' =
+			VAR x = [Loss-Making Share YoY (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x < -0.5, "#2E8B57", IF(x > 0.5, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: df75aeb4-056b-4c20-8dd3-927efb5d855a
+
+	/// Font/data colour: redemption cost % of member revenue vs prior year (LOWER is better).
+	measure 'CF - Redemption Cost YoY Color' =
+			VAR x = [Redemption Cost % YoY (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x < -0.5, "#2E8B57", IF(x > 0.5, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: cb23251a-3187-4306-bc4d-739c6f64bcc4
+
+	/// Font/data colour: member revenue share vs prior year (higher is better).
+	measure 'CF - Member Revenue YoY Color' =
+			VAR x = [Member Revenue % YoY (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 0.5, "#2E8B57", IF(x < -0.5, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 403399cd-b37a-49da-a913-dcc1e39101d3
+
+	/// Font/data colour: food share change vs prior year (pp).
+	measure 'CF - Food Share YoY Color' =
+			VAR x = [Food Share YoY (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 0.5, "#2E8B57", IF(x < -0.5, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 4ce54cc7-57bc-4e09-bdcc-b510d5bc6ced
+
+	/// Font/data colour: retail beans share change vs prior year (pp).
+	measure 'CF - Beans Share YoY Color' =
+			VAR x = [Retail Beans Share YoY (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 0.5, "#2E8B57", IF(x < -0.5, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: c01909ff-b355-4688-82fd-f4cacd3078ef
+
+	/// Bar colour: coffee brown for profit, red for loss.
+	measure 'CF - Net Profit Sign Color' =
+			VAR x = [Total Net Profit]
+			RETURN IF(ISBLANK(x), "#808080", IF(x < 0, "#D64550", "#6F4E37"))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: d27ce270-3b41-406c-886b-82ef6ecff4cc
+
+	/// Colour by margin vs estate: green > +1 pp, red < -1 pp, grey between.
+	measure 'CF - Margin vs Estate Color' =
+			VAR x = [Margin vs Estate (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 1, "#2E8B57", IF(x < -1, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 52b6e70d-6844-4500-8ff1-5ee841d6a3d3
+
+	/// Colour by rent burden vs estate: red when rent % is > 1 pp above estate, green when > 1 pp below.
+	measure 'CF - Rent vs Estate Color' =
+			VAR x = [Rent % vs Estate (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 1, "#D64550", IF(x < -1, "#2E8B57", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 66194ee1-64a3-48c1-ab1b-2bc128eb298e
+
+	/// Colour by derived profitability status (5 levels).
+	measure 'CF - Derived Status Color' = SWITCH([Derived Profitability Status], "Highly-Profitable", "#1B7F4D", "Profitable", "#5BA97B", "Break-Even", "#E0A800", "Loss-Making", "#D64550", "Structural-Loss", "#8B1A1A", "#808080")
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 89cbb660-f985-4658-88e9-1869346dfec2
+
+	/// Colour by review flag: Review red, Watch amber, OK green.
+	measure 'CF - Review Flag Color' = SWITCH([Review Flag], "Review", "#D64550", "Watch", "#E0A800", "OK", "#2E8B57", "#808080")
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 73404236-6a60-4b39-98a6-b04975665272
+
+	/// Green when estimated loyalty net value >= 0, red when negative.
+	measure 'CF - Loyalty Net Value Color' =
+			VAR x = [Loyalty Net Value (Est.)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x >= 0, "#2E8B57", "#D64550"))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: d55f6189-8428-4edc-b436-d7cd796ed1cb
+
+	/// Red when redemption cover is below 1.0x (programme costs more than estimated member margin), green otherwise.
+	measure 'CF - Redemption Cover Color' =
+			VAR x = [Redemption Cover (x)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x < 1, "#D64550", "#2E8B57"))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: c9ff2712-4f96-478b-913c-292e63b20195
+
+	/// Colour by redemption cost % vs estate: red when > 0.5 pp above estate, green when > 0.5 pp below.
+	measure 'CF - Redemption vs Estate Color' =
+			VAR x = [Redemption Cost % vs Estate (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 0.5, "#D64550", IF(x < -0.5, "#2E8B57", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 68b53fbb-79b2-46ae-bec5-1174698ae17e
+
+	/// Colour by member revenue % vs estate (green > +1 pp, red < -1 pp).
+	measure 'CF - Member Revenue vs Estate Color' =
+			VAR x = [Member Revenue % vs Estate (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 1, "#2E8B57", IF(x < -1, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: f2670dea-e3f8-4b80-a730-eacfe90ef5cb
+
+	/// Colour by loss-making share vs estate (red when > 1 pp worse).
+	measure 'CF - Loss Share vs Estate Color' =
+			VAR x = [Loss-Making Share vs Estate (pp)]
+			RETURN IF(ISBLANK(x), "#808080", IF(x > 1, "#D64550", IF(x < -1, "#2E8B57", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 703431b9-654e-4a87-a7bb-939b525d2530
+
+	/// Green when net profit rose vs prior year, red when it fell (store mover chart).
+	measure 'CF - Movers Color' =
+			VAR x = [Net Profit YoY £]
+			RETURN IF(ISBLANK(x), "#808080", IF(x >= 0, "#2E8B57", "#D64550"))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 59dc2873-a672-4a2c-82dc-194cb77e6a80
+
+	/// Green/red by sign of weekend uplift (sample).
+	measure 'CF - Weekend Uplift Color' =
+			VAR x = [Weekend Uplift %]
+			RETURN IF(ISBLANK(x), "#808080", IF(x >= 0, "#2E8B57", "#D64550"))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: 645fcad7-2ba8-465e-9c26-7def8d5c21ef
+
+	/// Green/red by sign of bank holiday uplift (sample).
+	measure 'CF - Bank Holiday Uplift Color' =
+			VAR x = [Bank Holiday Uplift %]
+			RETURN IF(ISBLANK(x), "#808080", IF(x >= 0, "#2E8B57", "#D64550"))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: c227cff8-545d-41a0-90fe-450377dce732
+
+	/// Seasonality index: green >= 1.05, red <= 0.95, grey otherwise.
+	measure 'CF - Seasonality Index Color' =
+			VAR x = [Revenue Seasonality Index]
+			RETURN IF(ISBLANK(x), "#808080", IF(x >= 1.05, "#2E8B57", IF(x <= 0.95, "#D64550", "#808080")))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: ee172ef6-59c8-4f7a-bc46-b3d4d50006a3
+
+	/// Highlights the peak trading day in coffee brown, others in light tan.
+	measure 'CF - Peak Day Color' =
+			VAR v = [Avg Revenue per Record (Sample)]
+			VAR mx = MAXX(ALLSELECTED(dim_date[day_of_week]), [Avg Revenue per Record (Sample)])
+			RETURN IF(ISBLANK(v), "#808080", IF(v = mx, "#6F4E37", "#C8B8A8"))
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: bf56bb4d-f37a-451f-8376-5d7b07829f1e
+
+	/// Amber when fewer than 5 stores sit behind the number (low sample), grey otherwise.
+	measure 'CF - Low Sample Color' = IF([Store Count] < 5, "#E0A800", "#808080")
+		displayFolder: 11 Conditional Formatting\CF - Font & Data Colour
+		lineageTag: a818bd51-dd28-43c9-9d85-5b4613ca3f90
+
+	/// Light background tint for revenue card (derived from the CF colour).
+	measure 'BF - Revenue KPI' = ```
+			
+			    SWITCH([CF - Revenue YoY Color], 
+			        "#2E8B57", "#E8F5EE", 
+			        "#D64550", "#FBE9EA", 
+			        "#F2F2F2")
+			```
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 8329450c-0bf6-4ffc-adfe-211fa39f7998
+
+	/// Background tint for net profit card.
+	measure 'BF - Net Profit KPI' = SWITCH([CF - Net Profit YoY Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: a6b1157c-5941-4016-86d7-5ba5899c984f
+
+	/// Background tint for margin card.
+	measure 'BF - Margin KPI' = SWITCH([CF - Margin YoY Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 972d8698-ae8a-42eb-a20c-fc8154fdf501
+
+	/// Background tint for loss-share card (lower is better).
+	measure 'BF - Loss Share KPI' = SWITCH([CF - Loss Share YoY Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 1f67a6a5-69c7-4938-a394-7fa9c1421d52
+
+	/// Background tint for redemption-cost card.
+	measure 'BF - Redemption Cost KPI' = SWITCH([CF - Redemption Cost YoY Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: fa79c14e-b865-42a2-9421-7504be8614ae
+
+	/// Background tint for member revenue card.
+	measure 'BF - Member Revenue KPI' = SWITCH([CF - Member Revenue YoY Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: a38b923c-1e28-4eed-bd95-1dc51e5ca3eb
+
+	/// Background tint for food share card.
+	measure 'BF - Food Share KPI' = SWITCH([CF - Food Share YoY Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 40e93464-c37e-484f-9afa-63d735e9b8c2
+
+	/// Background tint for retail beans share card.
+	measure 'BF - Beans Share KPI' = SWITCH([CF - Beans Share YoY Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 29875d25-8888-4eb9-aa00-ab471bcdadeb
+
+	/// Background tint for loyalty net value card.
+	measure 'BF - Loyalty Net Value KPI' = SWITCH([CF - Loyalty Net Value Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 786b71f6-6601-425d-9604-5e91089df9d0
+
+	/// Background tint for weekend uplift card.
+	measure 'BF - Weekend Uplift KPI' = SWITCH([CF - Weekend Uplift Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 5bb9b764-9818-4d3f-8c14-c3c236ce3c2c
+
+	/// Background tint for bank holiday uplift card.
+	measure 'BF - Bank Holiday Uplift KPI' = SWITCH([CF - Bank Holiday Uplift Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#F2F2F2")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 921c870f-b68e-4a49-be4a-622fbdaa04ab
+
+	/// Cell background by derived status.
+	measure 'BF - Derived Status' = SWITCH([CF - Derived Status Color], "#1B7F4D", "#E3F2EA", "#5BA97B", "#EAF5EE", "#E0A800", "#FFF6DD", "#D64550", "#FBE9EA", "#8B1A1A", "#F7E1E1", "#FFFFFF")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: cd3073c5-230d-4d96-8679-70a0a4047240
+
+	/// Cell background by review flag.
+	measure 'BF - Review Flag' = SWITCH([CF - Review Flag Color], "#D64550", "#FBE9EA", "#E0A800", "#FFF6DD", "#2E8B57", "#E8F5EE", "#FFFFFF")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 493f6c47-aa69-43b1-83d6-e49f175974e5
+
+	/// Cell background by margin vs estate.
+	measure 'BF - Margin vs Estate' = SWITCH([CF - Margin vs Estate Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#FFFFFF")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: fdfe1873-a3e3-42a4-a8a5-117d9abc48e6
+
+	/// Cell background by rent burden vs estate.
+	measure 'BF - Rent vs Estate' = SWITCH([CF - Rent vs Estate Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#FFFFFF")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: fde65448-8f2c-4ec4-880f-df5d71f0a4f0
+
+	/// Cell background for redemption cover.
+	measure 'BF - Redemption Cover' = SWITCH([CF - Redemption Cover Color], "#2E8B57", "#E8F5EE", "#D64550", "#FBE9EA", "#FFFFFF")
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 4e26b3bc-c496-4d16-938d-8d7e8671ca01
+
+	/// Insight panel background: Key Driver (cool grey-blue).
+	measure 'BF - Insight Key Driver' = "#EEF2F7"
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 19c7de8d-a508-4380-8323-4205a2dcef47
+
+	/// Insight panel background: Trend (warm neutral).
+	measure 'BF - Insight Trend' = "#F1ECE6"
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 4c7063d8-1416-422e-a93a-4298de4a5224
+
+	/// Insight panel background: Risk (red tint).
+	measure 'BF - Insight Risk' = "#FBE9EA"
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 5c95b430-591b-4c94-a1f4-cfd8816f8926
+
+	/// Insight panel background: Opportunity (green tint).
+	measure 'BF - Insight Opportunity' = "#E8F5EE"
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: e4512fd2-ec0a-4b22-a68d-21d4cd4df037
+
+	/// Insight panel background: Now What / recommended attention (amber tint).
+	measure 'BF - Insight Now What' = "#FFF6DD"
+		displayFolder: 11 Conditional Formatting\BF - Background
+		lineageTag: 6f3f654c-8390-4efd-bb39-73868638e455
+
+	/// Page 1 title.
+	measure 'Title - P1 Executive Overview' = "Executive Performance Overview"
+		displayFolder: 08 Titles\Page Titles
+		lineageTag: ac759b06-f767-48ee-806f-09532961b2d2
+
+	/// Page 2 title.
+	measure 'Title - P2 Store & Region Profitability' = "Store & Regional Profitability"
+		displayFolder: 08 Titles\Page Titles
+		lineageTag: 68ab0d5c-72a2-463b-86be-1bed72c00e17
+
+	/// Page 3 title.
+	measure 'Title - P3 Loyalty Programme' = "Loyalty Programme Effectiveness"
+		displayFolder: 08 Titles\Page Titles
+		lineageTag: b696f1ac-d568-403b-b765-c823393ba47c
+
+	/// Page 4 title.
+	measure 'Title - P4 Revenue Mix & Seasonality' = "Revenue Mix & Seasonal Trading"
+		displayFolder: 08 Titles\Page Titles
+		lineageTag: 6c60966c-5bea-4cf6-a35d-b71447bfd484
+
+	/// Page 5 (drill-through) title includes the store.
+	measure 'Title - P5 Store Deep Dive' = "Store Deep Dive | " & [Label - Store]
+		displayFolder: 08 Titles\Page Titles
+		lineageTag: e26bf0a9-0d65-47d7-8af0-e46f0361ba88
+
+	/// Page 1 subtitle: period, scope, store count, net profit, margin and YoY change.
+	measure 'Subtitle - P1 Executive Overview' =
+			VAR PYtxt = IF(ISBLANK([Prior Year]), "", " | " & [Txt - Net Profit Change] & " net profit vs " & FORMAT([Prior Year], "0"))
+			RETURN [Label - Period] & " | " & [Label - Scope] & " | " & FORMAT([Store Count], "0") & " stores | Net profit " & [Txt - Net Profit] & " (" & FORMAT([Net Profit Margin %], "0.0%") & " margin)" & PYtxt
+		displayFolder: 09 Subtitles\Page Subtitles
+		lineageTag: 3bc0ea4e-4d8d-435f-992d-8a7de9a5fddb
+
+	/// Page 2 subtitle with review count.
+	measure 'Subtitle - P2 Store & Region Profitability' = [Label - Period] & " | " & [Label - Scope] & " | " & FORMAT([Stores to Review], "0") & " of " & FORMAT([Store Count], "0") & " stores flagged for review (period margin below -2%)"
+		displayFolder: 09 Subtitles\Page Subtitles
+		lineageTag: 21063d8c-e55b-4637-857d-15d037a213ae
+
+	/// Page 3 subtitle with adoption correlation.
+	measure 'Subtitle - P3 Loyalty Programme' =
+			VAR r = [Corr - Adoption vs Member Revenue %]
+			RETURN [Label - Period] & " | " & [Label - Scope] & " | Adoption vs member-revenue correlation r = " & IF(ISBLANK(r), "n/a (select 3+ stores)", FORMAT(r, "0.00"))
+		displayFolder: 09 Subtitles\Page Subtitles
+		lineageTag: 189ea6f5-f7a9-4dbc-bbc4-3306f353bc4d
+
+	/// Page 4 subtitle with sample-coverage caveat.
+	measure 'Subtitle - P4 Revenue Mix & Seasonality' = [Label - Period] & " | " & [Label - Scope] & " | Daily-sample visuals cover about " & FORMAT([Sample Coverage %], "0%") & " of store-days: read shares and averages, not totals"
+		displayFolder: 09 Subtitles\Page Subtitles
+		lineageTag: c6bb5d6e-e9e0-4c05-9def-495c3d7d2ea9
+
+	/// Page 5 subtitle: region, rank in estate, derived status.
+	measure 'Subtitle - P5 Store Deep Dive' =
+			IF(HASONEVALUE(dim_store[store_name]),
+			    SELECTEDVALUE(dim_store[region]) & " | " & SELECTEDVALUE(dim_store[location_type]) & " | Net profit rank #" & FORMAT(RANKX(ALL(dim_store[store_name]), [Total Net Profit], , DESC, DENSE), "0") & " of " & FORMAT([Estate Store Count], "0") & " | Status: " & [Derived Profitability Status],
+			    "Select a store (drill through from Page 2)")
+		displayFolder: 09 Subtitles\Page Subtitles
+		lineageTag: e0755db2-9eae-443e-a6bd-5dbf1755d96d
+
+	/// Revenue card comparison text vs prior year.
+	measure 'Card Sub - Revenue' = ```
+			
+			VAR G = [Revenue YoY %]
+			RETURN 
+			    IF(ISBLANK(G), "Select one year to compare with the prior year", IF(G >= 0, "▲ ", "▼ ") & FORMAT(ABS(G), "0.0%") & " vs " & FORMAT([Prior Year], "0"))
+			```
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 39d9cfbd-6147-4789-b086-cc4e69b59dc2
+
+	/// Net profit card comparison text.
+	measure 'Card Sub - Net Profit' =
+			VAR G = [Net Profit YoY %]
+			RETURN IF(ISBLANK(G), "Select one year to compare with the prior year", IF(G >= 0, "▲ ", "▼ ") & FORMAT(ABS(G), "0.0%") & " vs " & FORMAT([Prior Year], "0") & " (" & [Txt - Net Profit Change] & ")")
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: c9ae1f8f-7391-41c6-b6dc-c33f0f1b7aba
+
+	/// Margin card comparison text in pp.
+	measure 'Card Sub - Margin' =
+			VAR G = [Net Profit Margin YoY (pp)]
+			RETURN IF(ISBLANK(G), "Select one year to compare with the prior year", IF(ROUND(G, 1) = 0, "► flat vs ", IF(G >= 0, "▲ " & FORMAT(ABS(G), "0.0") & " pp vs ", "▼ " & FORMAT(ABS(G), "0.0") & " pp vs ")) & FORMAT([Prior Year], "0") & " (" & FORMAT([PY Net Profit Margin %], "0.0%") & ")")
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: ce368df5-eff5-4f3b-b00d-d4c8d48a8278
+
+	/// Loss-share card comparison text (lower is better).
+	measure 'Card Sub - Loss Share' =
+			VAR G = [Loss-Making Share YoY (pp)]
+			RETURN IF(ISBLANK(G), "Select one year to compare with the prior year", IF(ROUND(G, 1) = 0, "► flat vs ", IF(G >= 0, "▲ " & FORMAT(ABS(G), "0.0") & " pp vs ", "▼ " & FORMAT(ABS(G), "0.0") & " pp vs ")) & FORMAT([Prior Year], "0") & " (" & FORMAT([PY Loss-Making Store-Months %], "0.0%") & ") | " & FORMAT([Loss-Making Store-Months], "0") & " loss-making store-months")
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 87f22cb1-1681-45b8-a1b0-3d31bf839b03
+
+	/// Redemption cost card comparison text (lower is better).
+	measure 'Card Sub - Redemption Cost' =
+			VAR G = [Redemption Cost % YoY (pp)]
+			RETURN IF(ISBLANK(G), "Select one year to compare with the prior year", IF(ROUND(G, 1) = 0, "► flat vs ", IF(G >= 0, "▲ " & FORMAT(ABS(G), "0.0") & " pp vs ", "▼ " & FORMAT(ABS(G), "0.0") & " pp vs ")) & FORMAT([Prior Year], "0") & " | Cost " & [Txt - Redemption Cost])
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: ee6c9b9a-cab8-48f4-b326-ab63f011a8fc
+
+	/// Member revenue share card comparison text.
+	measure 'Card Sub - Member Revenue' =
+			VAR G = [Member Revenue % YoY (pp)]
+			RETURN IF(ISBLANK(G), "Select one year to compare with the prior year", IF(ROUND(G, 1) = 0, "► flat vs ", IF(G >= 0, "▲ " & FORMAT(ABS(G), "0.0") & " pp vs ", "▼ " & FORMAT(ABS(G), "0.0") & " pp vs ")) & FORMAT([Prior Year], "0") & " (" & FORMAT([PY Loyalty Member Revenue %], "0.0%") & ")")
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: fa224709-6460-4e8d-bc71-c9e913caa348
+
+	/// Food share card comparison text (sample).
+	measure 'Card Sub - Food Share' =
+			VAR G = [Food Share YoY (pp)]
+			RETURN IF(ISBLANK(G), "Select one year to compare with the prior year", IF(ROUND(G, 1) = 0, "► flat vs ", IF(G >= 0, "▲ " & FORMAT(ABS(G), "0.0") & " pp vs ", "▼ " & FORMAT(ABS(G), "0.0") & " pp vs ")) & FORMAT([Prior Year], "0") & " (" & FORMAT([PY Food Share %], "0.0%") & ")")
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 4241a7b5-20d8-444d-9895-136adb8f88f7
+
+	/// Retail beans share card comparison text (sample).
+	measure 'Card Sub - Beans Share' =
+			VAR G = [Retail Beans Share YoY (pp)]
+			RETURN IF(ISBLANK(G), "Select one year to compare with the prior year", IF(ROUND(G, 1) = 0, "► flat vs ", IF(G >= 0, "▲ " & FORMAT(ABS(G), "0.0") & " pp vs ", "▼ " & FORMAT(ABS(G), "0.0") & " pp vs ")) & FORMAT([Prior Year], "0") & " (" & FORMAT([PY Retail Beans Share %], "0.0%") & ")")
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 0327d255-1e4c-4fa5-bbdf-ccda0a3a314c
+
+	/// Loyalty net value card text with the estimate caveat.
+	measure 'Card Sub - Loyalty Net Value' = "Estimate: member margin less " & [Txt - Redemption Cost] & " redemption cost | cover " & FORMAT([Redemption Cover (x)], "0.0") & "x"
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 6cd8e5f3-44af-43f4-8c19-b6b4a6a078d9
+
+	/// Adoption card text vs estate average.
+	measure 'Card Sub - Adoption' = "Estate average " & FORMAT(CALCULATE([Avg Loyalty Adoption %], REMOVEFILTERS(dim_store)), "0.0%") & " | store-level attribute"
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 8581935e-ae6f-424b-b2d0-0e60c6dcb2ef
+
+	/// Weekend uplift card text (sample).
+	measure 'Card Sub - Weekend' = FORMAT([Weekend Avg Revenue per Record], "£#,0") & " per weekend record vs " & FORMAT([Weekday Avg Revenue per Record], "£#,0") & " weekday"
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: e0df97b2-156a-4f72-b983-1086410ab3af
+
+	/// Bank holiday uplift card text (sample).
+	measure 'Card Sub - Bank Holiday' = FORMAT([Bank Holiday Avg Revenue per Record], "£#,0") & " on bank holidays vs " & FORMAT([Non-Bank-Holiday Avg Revenue per Record], "£#,0") & " normal days | " & FORMAT(CALCULATE([Sample Records], dim_date[is_uk_bank_holiday] = TRUE()), "0") & " records"
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 68f90dfc-8994-4fe0-85fd-e086a6b725bd
+
+	/// Stores-in-scope card text.
+	measure 'Card Sub - Stores in Scope' = "of " & FORMAT([Estate Store Count], "0") & " estate stores | " & FORMAT([Stores Not Active], "0") & " not currently Active"
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: 93541ec5-440b-4507-a6cc-08b73e83270a
+
+	/// Stores-to-review card text.
+	measure 'Card Sub - Stores to Review' = "Loss-Making " & FORMAT([Stores - Loss-Making], "0") & " | Structural-Loss " & FORMAT([Stores - Structural-Loss], "0") & " | Break-Even (watch) " & FORMAT([Stores - Break-Even], "0")
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: ac70eafc-c314-41e1-a492-3647e5373b05
+
+	/// Net loss card text.
+	measure 'Card Sub - Net Loss' = FORMAT([Loss-Making Store-Months], "0") & " loss-making store-months (" & FORMAT([Loss-Making Store-Months %], "0.0%") & " of all)"
+		displayFolder: 09 Subtitles\Card Comparison
+		lineageTag: ec99a987-ed12-42f7-b9c5-ee0ab1e6c172
+
+	/// P1 combo chart title.
+	measure 'Title - P1 Monthly Net Profit' = "Monthly Net Profit | " & [Label - Period] & IF(ISBLANK([Prior Year]), "", " vs " & FORMAT([Prior Year], "0"))
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 5c4fd912-6926-4f72-a003-104937fe70c8
+
+	/// P1 margin trend title.
+	measure 'Title - P1 Margin Trend' = "Net Profit Margin % Trend | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: b0b33330-0572-4f77-b530-5eef6d64b000
+
+	/// P1 regional margin title.
+	measure 'Title - P1 Regional Margin' = "Net Profit Margin by Region | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: e2a7be52-ef41-4f3d-807a-ff916b430e51
+
+	/// P1 insights title.
+	measure 'Title - P1 Insights' = "What the Data Says | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: b6c5d55d-e906-4956-b1a4-5b61a213c64e
+
+	/// P2 rent vs revenue scatter title.
+	measure 'Title - P2 Rent vs Revenue' = "Does Higher Rent Buy Higher Revenue? | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: e4951016-22bf-4c4f-bdeb-08f4451251ed
+
+	/// P2 cost structure matrix title.
+	measure 'Title - P2 Cost Structure' = "Cost Structure by Location Type | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: af65806e-1d16-4c28-a2dd-45bc1d9f86ac
+
+	/// P2 decomposition tree title.
+	measure 'Title - P2 Profit Driver Tree' = "Where Is Profit Made or Lost? | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: eed27efa-e4a5-4937-b36e-8decc484d5b3
+
+	/// P2 top and bottom stores title.
+	measure 'Title - P2 Top & Bottom Stores' = "Top & Bottom 5 Stores by Net Profit | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: de04e383-c1c7-4430-9f7e-536cf904037e
+
+	/// P2 movers title.
+	measure 'Title - P2 Store Movers' = "Biggest Movers: Net Profit vs Prior Year | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: ac143aea-3c6b-48c7-af03-919da6135169
+
+	/// P2 review register title.
+	measure 'Title - P2 Review Register' = "Store Review Register | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 4f098737-ab12-460f-afb8-f510897a59ff
+
+	/// P3 scatter title.
+	measure 'Title - P3 Adoption vs Member Revenue' = "Does Adoption Drive Member Revenue? | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: dc1fd99e-632b-4668-a154-f6f91b58ca2b
+
+	/// P3 net value title.
+	measure 'Title - P3 Net Value by Region' = "Estimated Loyalty Net Value by Region | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 2160e727-c19f-4a6b-846a-4ad0970b70f0
+
+	/// P3 cost trend title.
+	measure 'Title - P3 Cost Trend' = "Loyalty Cost Trend | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 67dfefda-b9cb-4209-aeff-08a8be0b32b0
+
+	/// P3 sample basket title.
+	measure 'Title - P3 Basket & Loyalty Share' = "Transaction Value & Loyalty Share by Location Type (Sample) | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 8eb23995-7ee0-441e-b8d0-de6d1261d2c4
+
+	/// P3 store scorecard title.
+	measure 'Title - P3 Store Scorecard' = "Store Loyalty Scorecard | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 937a5e64-0433-458b-a467-e67af9909c02
+
+	/// P4 mix over time title.
+	measure 'Title - P4 Mix Over Time' = "Revenue Mix Over Time (Sample) | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: e982cd1b-5f04-44d8-bb00-4148a7c336e1
+
+	/// P4 mix by location type title.
+	measure 'Title - P4 Mix by Location Type' = "Revenue Mix by Location Type (Sample) | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: c9de6070-27fd-4f66-8dcd-c37ce63189fb
+
+	/// P4 day of week title.
+	measure 'Title - P4 Day of Week' = "Trading by Day of Week (Sample) | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 4ccb622d-718f-4d86-8ceb-9a4006de3490
+
+	/// P4 seasonal profit title.
+	measure 'Title - P4 Seasonal Profit' = "Seasonal Profit Pattern | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 818b3ba6-8303-4912-99e5-38de5eb0655c
+
+	/// P4 bank holiday title.
+	measure 'Title - P4 Bank Holiday' = "Bank Holiday Effect by Location Type (Sample) | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: faa8d0cc-cc3f-4cb9-a2d2-1006ce486e8b
+
+	/// P4 trading calendar title.
+	measure 'Title - P4 Trading Calendar' = "Trading Calendar Performance (Sample) | " & [Label - Period]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 0642db4e-7f94-4af5-9d9b-cb7fafcb394b
+
+	/// P5 monthly profit title.
+	measure 'Title - P5 Store Monthly Profit' = "Monthly Net Profit & Margin | " & [Label - Store]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 4c6bff1d-1e4c-475f-b227-9e958c0b3c27
+
+	/// P5 composition title.
+	measure 'Title - P5 P&L Composition' = "Where Each £1 of Revenue Goes | " & [Label - Store]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: aa26a7fd-8bd3-4874-a67a-8084bd2bacbd
+
+	/// P5 monthly detail title.
+	measure 'Title - P5 Monthly Detail' = "Monthly P&L Detail | " & [Label - Store]
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 8182e62b-e716-4ecf-b5f5-99ace4283e7e
+
+	/// P1 monthly profit subtitle.
+	measure 'Subtitle - P1 Monthly Net Profit' = "Highest-profit month: " & [Peak Month (Net Profit)] & " | Lowest: " & [Lowest Month (Net Profit)] & " | Which months carry the year?"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: d5bc6f34-7c20-4d26-bada-f04972da5b97
+
+	/// P1 margin trend subtitle.
+	measure 'Subtitle - P1 Margin Trend' = "Weighted margin by month vs prior year | Estate margin " & FORMAT([Estate Net Profit Margin %], "0.0%")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: eb24e87f-5f85-4ced-81d3-bfd7b26607d0
+
+	/// P1 regional margin subtitle with sample-size warning.
+	measure 'Subtitle - P1 Regional Margin' = "Highest: " & [Top Region (Margin)] & " (" & FORMAT([Top Region Margin %], "0.0%") & ") | Lowest: " & [Bottom Region (Margin)] & " (" & FORMAT([Bottom Region Margin %], "0.0%") & ") | " & FORMAT(MINX(ALLSELECTED(dim_store[region]), [Store Count]), "0") & "-" & FORMAT(MAXX(ALLSELECTED(dim_store[region]), [Store Count]), "0") & " stores per region"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: d254ff10-e1f4-4a2d-99b0-5d1d3736124c
+
+	/// P2 scatter subtitle with both correlations.
+	measure 'Subtitle - P2 Rent vs Revenue' = "Store level: rent vs revenue r = " & IF(ISBLANK([Corr - Rent vs Revenue per Store-Month]), "n/a", FORMAT([Corr - Rent vs Revenue per Store-Month], "0.00")) & " | rent vs margin r = " & IF(ISBLANK([Corr - Rent vs Net Profit Margin %]), "n/a", FORMAT([Corr - Rent vs Net Profit Margin %], "0.00"))
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 0a4b98ae-acbb-4c7a-b2f5-061d85db909a
+
+	/// P2 cost structure subtitle.
+	measure 'Subtitle - P2 Cost Structure' = "Each cost line as % of revenue | Estate net margin " & FORMAT([Estate Net Profit Margin %], "0.0%")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 14b45b7b-b872-4604-8e54-2294380986bb
+
+	/// P2 decomposition tree subtitle.
+	measure 'Subtitle - P2 Profit Driver Tree' = "Expand Region > Location Type > Store on net profit to find the source of the result"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 45b1f3b5-c53a-49c9-9438-51f514b02616
+
+	/// P2 top and bottom subtitle.
+	measure 'Subtitle - P2 Top & Bottom Stores' = "Highest: " & [Top Store (Net Profit)] & " (" & FORMAT([Top Store Net Profit] / 1000, "£#,0") & "K) | Lowest: " & [Bottom Store (Net Profit)] & " (" & FORMAT([Bottom Store Net Profit] / 1000, "£#,0") & "K)"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 9faeeef7-8077-41c9-9c4d-31296a90d138
+
+	/// P2 movers subtitle.
+	measure 'Subtitle - P2 Store Movers' = IF(ISBLANK([Prior Year]), "Select one year to compare with the prior year", "Most improved: " & [Most Improved Store] & " (" & FORMAT([Most Improved Store YoY £] / 1000, "+£#,0;-£#,0") & "K) | Most deteriorated: " & [Most Deteriorated Store] & " (" & FORMAT([Most Deteriorated Store YoY £] / 1000, "+£#,0;-£#,0") & "K)")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 7364306c-f4ba-4d48-b51d-46059348721e
+
+	/// P2 review register subtitle.
+	measure 'Subtitle - P2 Review Register' = "Status uses documented margin thresholds on the period margin | " & FORMAT([Stores to Review], "0") & " to review, " & FORMAT([Stores - Break-Even], "0") & " on watch"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: d8351853-9b30-4dd5-bd8a-343498b8b840
+
+	/// P3 scatter subtitle.
+	measure 'Subtitle - P3 Adoption vs Member Revenue' =
+			VAR r = [Corr - Adoption vs Member Revenue %]
+			RETURN IF(ISBLANK(r), "Select 3 or more stores to compute the correlation", "r = " & FORMAT(r, "0.00") & " (" & IF(ABS(r) >= 0.6, "strong", IF(ABS(r) >= 0.3, "moderate", "weak")) & ") across " & FORMAT([Store Count], "0") & " stores | association, not proof of incremental spend")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 142f463b-793e-4cc0-bde6-81cf59362c33
+
+	/// P3 net value subtitle.
+	measure 'Subtitle - P3 Net Value by Region' = "Member revenue x estate gross margin, less redemption cost | estimate, not incremental ROI"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 922881e2-bfa3-428b-b0bf-e8b52c3d9e93
+
+	/// P3 cost trend subtitle.
+	measure 'Subtitle - P3 Cost Trend' = "Redemption cost as % of member revenue by month | Estate " & FORMAT([Estate Redemption Cost % of Member Revenue], "0.0%")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 9b330b99-a294-4357-ac54-b0af75873d53
+
+	/// P3 sample basket subtitle.
+	measure 'Subtitle - P3 Basket & Loyalty Share' = "Daily sample (about " & FORMAT([Sample Coverage %], "0%") & " of store-days) | member vs non-member basket size cannot be derived from this data"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 77103907-f2a5-42d7-91af-26e87b5607e6
+
+	/// P3 store scorecard subtitle.
+	measure 'Subtitle - P3 Store Scorecard' = "Adoption, member revenue share and redemption cost by store | " & FORMAT([Store Count], "0") & " stores"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: bcb4e777-c8de-4f98-9b95-4badc68c7239
+
+	/// P4 mix over time subtitle.
+	measure 'Subtitle - P4 Mix Over Time' = "Espresso " & FORMAT([Espresso Share %], "0.0%") & " | Filter " & FORMAT([Filter Share %], "0.0%") & " | Food " & FORMAT([Food Share %], "0.0%") & " | Retail beans " & FORMAT([Retail Beans Share %], "0.0%")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: f6963205-ae2f-458e-a939-9b0f065e4f81
+
+	/// P4 mix by location type subtitle.
+	measure 'Subtitle - P4 Mix by Location Type' = "Share of daily-sample revenue by stream | " & FORMAT(COUNTROWS(VALUES(dim_store[location_type])), "0") & " location types"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 926a2d05-0116-4e0f-90ad-b108d9105f6a
+
+	/// P4 day of week subtitle.
+	measure 'Subtitle - P4 Day of Week' = "Peak: " & [Peak Day (Sample)] & " | Lowest: " & [Lowest Day (Sample)] & " | average revenue per sampled record"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 1626d64f-c792-498f-b926-b72750e86f5d
+
+	/// P4 seasonal subtitle.
+	measure 'Subtitle - P4 Seasonal Profit' = "Peak month " & [Peak Month (Net Profit)] & " | Lowest month " & [Lowest Month (Net Profit)] & " | Peak quarter (revenue) " & [Peak Quarter (Revenue)] & " | Lowest " & [Lowest Quarter (Revenue)]
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 7dc7cbe8-1f6a-4f91-9531-489bcde205f6
+
+	/// P4 bank holiday subtitle with sample warning.
+	measure 'Subtitle - P4 Bank Holiday' = "Bank-holiday vs normal-day revenue per record | few bank-holiday records, so treat small location types with caution"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: a2b6c574-15c7-452b-ab22-4abf3b8bfe2a
+
+	/// P4 trading calendar subtitle.
+	measure 'Subtitle - P4 Trading Calendar' = "Standard days vs bank holidays vs Christmas period (daily sample)"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 1eaef586-2b36-4ada-aed9-0f99615faa7a
+
+	/// P5 monthly profit subtitle.
+	measure 'Subtitle - P5 Store Monthly Profit' = "Status: " & [Derived Profitability Status] & " | Margin " & FORMAT([Net Profit Margin %], "0.0%") & " vs estate " & FORMAT([Estate Net Profit Margin %], "0.0%")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 5094029c-5ba1-4141-810d-23cef1b274d9
+
+	/// P5 composition subtitle: every pound of revenue split into cost lines and profit.
+	measure 'Subtitle - P5 P&L Composition' = "COGS " & FORMAT([COGS % of Revenue], "0.0%") & " | Staffing " & FORMAT([Staffing % of Revenue], "0.0%") & " | Rent " & FORMAT([Rent % of Revenue], "0.0%") & " | Loyalty " & FORMAT([Loyalty Cost % of Revenue], "0.0%") & " | Net profit " & FORMAT([Net Profit Margin %], "0.0%")
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 2a5e3156-6b45-4377-9c59-53e47da1461b
+
+	/// P5 monthly detail subtitle.
+	measure 'Subtitle - P5 Monthly Detail' = FORMAT([Loss-Making Store-Months], "0") & " of " & FORMAT([Store-Months], "0") & " months in loss"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: c2fa21a3-a857-472c-be44-ae80d67318be
+
+	/// KEY DRIVER (what happened): profit, revenue, margin and where each pound of revenue goes.
+	measure 'Insight - P1 Key Driver' = "Net profit " & [Txt - Net Profit] & " on " & [Txt - Revenue] & " revenue (" & FORMAT([Net Profit Margin %], "0.0%") & " margin). Of each £1 of revenue: COGS " & FORMAT([COGS % of Revenue] * 100, "0.0") & "p, staffing " & FORMAT([Staffing % of Revenue] * 100, "0.0") & "p, rent " & FORMAT([Rent % of Revenue] * 100, "0.0") & "p, loyalty " & FORMAT([Loyalty Cost % of Revenue] * 100, "0.0") & "p."
+		displayFolder: 10 Insights\P1 Executive
+		lineageTag: 870ce80e-f6bf-4f93-b375-3e16bd07e52a
+
+	/// TREND: year-on-year movement in revenue, profit and margin.
+	measure 'Insight - P1 Trend' = IF(ISBLANK([Prior Year]), "Select a single year to see the year-on-year trend.", "Revenue " & FORMAT([Revenue YoY %], "+0.0%;-0.0%") & " and net profit " & FORMAT([Net Profit YoY %], "+0.0%;-0.0%") & " vs " & FORMAT([Prior Year], "0") & "; margin " & FORMAT([PY Net Profit Margin %], "0.0%") & " to " & FORMAT([Net Profit Margin %], "0.0%") & " (" & FORMAT([Net Profit Margin YoY (pp)], "+0.0;-0.0") & " pp).")
+		displayFolder: 10 Insights\P1 Executive
+		lineageTag: 1c34888f-e222-4173-9ca2-686be6bd4748
+
+	/// RISK: loss-making months, stores below threshold and region with the highest loss share.
+	measure 'Insight - P1 Risk' = FORMAT([Loss-Making Store-Months], "0") & " store-months (" & FORMAT([Loss-Making Store-Months %], "0.0%") & ") made a loss, costing " & [Txt - Net Loss] & ". " & FORMAT([Stores to Review], "0") & " store(s) sit below -2% margin over the period; " & [Highest Loss Share Region] & " has the highest loss-month share (" & FORMAT([Highest Region Loss Share %], "0.0%") & ")."
+		displayFolder: 10 Insights\P1 Executive
+		lineageTag: a962eb8d-fcd7-4f1e-894d-0f0c3ae08a4f
+
+	/// OPPORTUNITY: size of the margin gap between best and worst region.
+	measure 'Insight - P1 Opportunity' = "Regional margin runs from " & [Bottom Region (Margin)] & " (" & FORMAT([Bottom Region Margin %], "0.0%") & ") to " & [Top Region (Margin)] & " (" & FORMAT([Top Region Margin %], "0.0%") & "), a " & FORMAT(([Top Region Margin %] - [Bottom Region Margin %]) * 100, "0.0") & " pp gap: the prize if weaker regions close part of it."
+		displayFolder: 10 Insights\P1 Executive
+		lineageTag: 0295726e-e4cc-4ee4-acb8-200407210440
+
+	/// NOW WHAT: recommended attention.
+	measure 'Insight - P1 Now What' = IF([Stores to Review] = 0, "No store breaches the -2% period-margin threshold, so review the " & FORMAT([Stores - Break-Even], "0") & " break-even stores and the loss-making months behind them; ", "Review the " & FORMAT([Stores to Review], "0") & " flagged store(s); ") & "compare " & [Bottom Region (Margin)] & " with " & [Top Region (Margin)] & " on rent, staffing and location mix; plan staffing around " & [Lowest Month (Net Profit)] & ", the lowest-profit month."
+		displayFolder: 10 Insights\P1 Executive
+		lineageTag: bbcf3d23-1053-48ab-b4ae-e4e9bf7ecfa4
+
+	/// KEY DRIVER: spread of store profit.
+	measure 'Insight - P2 Key Driver' = "Store net profit runs from " & [Bottom Store (Net Profit)] & " (" & FORMAT([Bottom Store Net Profit] / 1000, "£#,0") & "K) to " & [Top Store (Net Profit)] & " (" & FORMAT([Top Store Net Profit] / 1000, "£#,0") & "K); " & [Top Location Type (Margin)] & " has the best margin and " & [Bottom Location Type (Margin)] & " the weakest."
+		displayFolder: 10 Insights\P2 Stores
+		lineageTag: ca20a28c-c0be-48ff-a023-bd117837cdcf
+
+	/// RISK: derived status distribution and non-active stores.
+	measure 'Insight - P2 Risk' = "Status mix: " & FORMAT([Stores - Highly-Profitable], "0") & " Highly-Profitable, " & FORMAT([Stores - Profitable], "0") & " Profitable, " & FORMAT([Stores - Break-Even], "0") & " Break-Even, " & FORMAT([Stores - Loss-Making], "0") & " Loss-Making, " & FORMAT([Stores - Structural-Loss], "0") & " Structural-Loss. " & FORMAT([Stores Not Active], "0") & " store(s) are not currently Active and booked " & FORMAT([Revenue from Non-Active Stores] / 1000000, "£0.0") & "M of revenue."
+		displayFolder: 10 Insights\P2 Stores
+		lineageTag: 26d0cc9e-804e-4c5b-baee-77db459bb2d9
+
+	/// KEY DRIVER (rent): strength of rent vs revenue and rent vs margin correlation.
+	measure 'Insight - P2 Rent' =
+			VAR r1 = [Corr - Rent vs Revenue per Store-Month]
+			VAR r2 = [Corr - Rent vs Net Profit Margin %]
+			RETURN IF(ISBLANK(r1) || ISBLANK(r2), "Select 3 or more stores to assess rent against revenue and margin.", "Rent vs revenue per store-month: " & IF(ABS(r1) >= 0.6, "strong", IF(ABS(r1) >= 0.3, "moderate", "weak")) & IF(r1 >= 0, " positive", " negative") & " (r = " & FORMAT(r1, "0.00") & "); rent vs net margin: " & IF(ABS(r2) >= 0.6, "strong", IF(ABS(r2) >= 0.3, "moderate", "weak")) & IF(r2 >= 0, " positive", " negative") & " (r = " & FORMAT(r2, "0.00") & "). " & IF(r2 <= -0.3, "Higher-rent stores keep less of each pound they earn.", IF(r2 >= 0.3, "Higher rent has not eroded margin.", "Rent level alone does not explain margin differences.")))
+		displayFolder: 10 Insights\P2 Stores
+		lineageTag: 6d302504-1991-438b-91df-f7595d6fe20f
+
+	/// TREND: most improved and most deteriorated stores and regions.
+	measure 'Insight - P2 Movers' = IF(ISBLANK([Prior Year]), "Select one year to see which stores improved or deteriorated.", "Most improved: " & [Most Improved Store] & " (" & FORMAT([Most Improved Store YoY £] / 1000, "+£#,0;-£#,0") & "K); most deteriorated: " & [Most Deteriorated Store] & " (" & FORMAT([Most Deteriorated Store YoY £] / 1000, "+£#,0;-£#,0") & "K). Region gaining most: " & [Top Region (Net Profit YoY £)] & "; losing most: " & [Bottom Region (Net Profit YoY £)] & ".")
+		displayFolder: 10 Insights\P2 Stores
+		lineageTag: dd239e9b-d3b9-4dd8-9034-cb494d18cea2
+
+	/// NOW WHAT: where to look first.
+	measure 'Insight - P2 Now What' = "Start with " & [Bottom Store (Margin)] & " (lowest margin)" & IF(ISBLANK([Most Deteriorated Store]), "", " and " & [Most Deteriorated Store] & " (largest profit decline)") & "; check whether location type, rent burden or staffing explains the gap before any closure decision."
+		displayFolder: 10 Insights\P2 Stores
+		lineageTag: f8556fcb-e1ae-4f22-adc2-86ff55193ea8
+
+	/// KEY DRIVER: adoption vs member revenue relationship.
+	measure 'Insight - P3 Key Driver' =
+			VAR r = [Corr - Adoption vs Member Revenue %]
+			RETURN IF(ISBLANK(r), "Select 3 or more stores to assess adoption against member revenue share.", "Adoption and member revenue share are " & IF(ABS(r) >= 0.6, "strongly", IF(ABS(r) >= 0.3, "moderately", "weakly")) & IF(r >= 0, " positively", " negatively") & " related across stores (r = " & FORMAT(r, "0.00") & "): stores that enrol more customers earn more of their revenue from members.")
+		displayFolder: 10 Insights\P3 Loyalty
+		lineageTag: b255f60e-170d-45a2-a521-33fa7b11f69a
+
+	/// KEY DRIVER (cost): redemption cost against member revenue and estimated cover.
+	measure 'Insight - P3 Cost' = "Redemption cost is " & FORMAT([Redemption Cost % of Member Revenue], "0.0%") & " of member revenue (estate " & FORMAT([Estate Redemption Cost % of Member Revenue], "0.0%") & "); estimated member gross profit covers it " & FORMAT([Redemption Cover (x)], "0.0") & "x, an estimated net value of " & [Txt - Loyalty Net Value] & "."
+		displayFolder: 10 Insights\P3 Loyalty
+		lineageTag: 8c23be54-5cfa-4311-b67b-fa0b504a11f4
+
+	/// RISK: limit of the evidence on incremental value.
+	measure 'Insight - P3 Risk' = "Member revenue is not proven incremental: members may be existing customers who would have spent anyway. The data has no non-member baseline or member transaction counts, so true programme ROI cannot be established."
+		displayFolder: 10 Insights\P3 Loyalty
+		lineageTag: 4976c56a-6e3d-45c5-b542-3971b80284b3
+
+	/// OPPORTUNITY: best and weakest region for member revenue share.
+	measure 'Insight - P3 Opportunity' = "Member revenue share is highest in " & [Top Region (Member Revenue %)] & " and lowest in " & [Bottom Region (Member Revenue %)] & ": learn what drives enrolment in the leader before investing more."
+		displayFolder: 10 Insights\P3 Loyalty
+		lineageTag: 87e20abe-da35-4645-aabc-aedb5f1882d5
+
+	/// NOW WHAT: recommended attention.
+	measure 'Insight - P3 Now What' = "Before expanding the scheme, run a controlled test or capture member vs non-member transaction counts; meanwhile track redemption cost at " & FORMAT([Redemption Cost % of Member Revenue], "0.0%") & " of member revenue."
+		displayFolder: 10 Insights\P3 Loyalty
+		lineageTag: 77b40df4-6676-4578-829e-33b5b3803c94
+
+	/// KEY DRIVER: revenue mix shares and food trend (sample).
+	measure 'Insight - P4 Key Driver' = "Espresso " & FORMAT([Espresso Share %], "0.0%") & " of sampled revenue, filter " & FORMAT([Filter Share %], "0.0%") & ", food " & FORMAT([Food Share %], "0.0%") & IF(ISBLANK([Food Share YoY (pp)]), "", " (" & FORMAT([Food Share YoY (pp)], "+0.0;-0.0") & " pp vs " & FORMAT([Prior Year], "0") & ")") & ", retail beans " & FORMAT([Retail Beans Share %], "0.0%") & IF(ISBLANK([Retail Beans Share YoY (pp)]), "", " (" & FORMAT([Retail Beans Share YoY (pp)], "+0.0;-0.0") & " pp)") & "."
+		displayFolder: 10 Insights\P4 Mix & Seasonality
+		lineageTag: 6ffb43d9-9549-478f-9625-0fa33bacf191
+
+	/// TREND: weekend and bank holiday effect (sample).
+	measure 'Insight - P4 Calendar' = "Weekends average " & FORMAT([Weekend Uplift %], "+0.0%;-0.0%") & " vs weekdays; bank holidays " & FORMAT([Bank Holiday Uplift %], "+0.0%;-0.0%") & " vs normal days (sample; " & FORMAT(CALCULATE([Sample Records], dim_date[is_uk_bank_holiday] = TRUE()), "0") & " bank-holiday records)."
+		displayFolder: 10 Insights\P4 Mix & Seasonality
+		lineageTag: b90ed932-90bd-4ebe-a0e2-be6e5517a1a4
+
+	/// TREND: peak and low quarter, month and trading day.
+	measure 'Insight - P4 Seasonal' = "Peak quarter by revenue: " & [Peak Quarter (Revenue)] & "; lowest: " & [Lowest Quarter (Revenue)] & ". Highest-profit month " & [Peak Month (Net Profit)] & ", lowest " & [Lowest Month (Net Profit)] & ". Peak trading day " & [Peak Day (Sample)] & ", quietest " & [Lowest Day (Sample)] & "."
+		displayFolder: 10 Insights\P4 Mix & Seasonality
+		lineageTag: 02d2f554-19cc-4cca-83ec-5191cca1fea2
+
+	/// NOW WHAT: staffing and stock planning with sample caveat.
+	measure 'Insight - P4 Now What' = "Align staffing and stock with " & [Peak Quarter (Revenue)] & " demand and " & [Lowest Day (Sample)] & " lows; confirm with full daily data before changing rotas, because the daily table is a sample (about " & FORMAT([Sample Coverage %], "0%") & " of store-days)."
+		displayFolder: 10 Insights\P4 Mix & Seasonality
+		lineageTag: 64637b05-aac0-4d91-a26f-ebd43ab0b8aa
+
+	/// Tooltip text for one store: region, profit, margin, rank, status, loss months.
+	measure 'Tooltip - Store Summary' = IF(HASONEVALUE(dim_store[store_name]), SELECTEDVALUE(dim_store[store_name]) & " | " & SELECTEDVALUE(dim_store[region]) & " | " & SELECTEDVALUE(dim_store[location_type]) & UNICHAR(10) & "Net profit " & [Txt - Net Profit] & " | Margin " & FORMAT([Net Profit Margin %], "0.0%") & " | Rank #" & FORMAT(RANKX(ALL(dim_store[store_name]), [Total Net Profit], , DESC, DENSE), "0") & " of " & FORMAT([Estate Store Count], "0") & UNICHAR(10) & "Status: " & [Derived Profitability Status] & " | Loss months: " & FORMAT([Loss-Making Store-Months], "0"))
+		displayFolder: 12 Tooltips
+		lineageTag: b27cdf0b-64cf-481b-9a71-2eb093a30642
+
+	/// Tooltip text for one region.
+	measure 'Tooltip - Region Summary' = IF(HASONEVALUE(dim_store[region]), SELECTEDVALUE(dim_store[region]) & ": " & FORMAT([Store Count], "0") & " stores" & UNICHAR(10) & "Net profit " & [Txt - Net Profit] & " | Margin " & FORMAT([Net Profit Margin %], "0.0%") & " (" & FORMAT([Margin vs Estate (pp)], "+0.0;-0.0") & " pp vs estate)" & UNICHAR(10) & "Loss-month share " & FORMAT([Loss-Making Store-Months %], "0.0%") & IF([Store Count] < 5, UNICHAR(10) & "Low sample: fewer than 5 stores", ""))
+		displayFolder: 12 Tooltips
+		lineageTag: 9040e161-3412-43e8-9a4b-1186e21eb6d9
+
+	/// Tooltip text for one month.
+	measure 'Tooltip - Month Summary' = IF(HASONEVALUE(dim_date[month_name]), SELECTEDVALUE(dim_date[month_name]) & " | Revenue " & [Txt - Revenue] & " | Net profit " & [Txt - Net Profit] & " | Margin " & FORMAT([Net Profit Margin %], "0.0%") & IF(ISBLANK([Revenue MoM %]), "", UNICHAR(10) & "Revenue vs previous month " & FORMAT([Revenue MoM %], "+0.0%;-0.0%")))
+		displayFolder: 12 Tooltips
+		lineageTag: 835972de-43f5-4abc-ae96-5d7293f19c69
+
+	/// Tooltip text for loyalty visuals.
+	measure 'Tooltip - Loyalty Summary' = "Adoption " & FORMAT([Avg Loyalty Adoption %], "0.0%") & " | Member revenue " & FORMAT([Loyalty Member Revenue %], "0.0%") & " of total" & UNICHAR(10) & "Redemption cost " & FORMAT([Redemption Cost % of Member Revenue], "0.0%") & " of member revenue | Est. net value " & [Txt - Loyalty Net Value]
+		displayFolder: 12 Tooltips
+		lineageTag: 96c221dd-ac20-4518-b4be-31c3ea691345
+
+	/// Sample-size note for any dimension chart (fewer than 5 stores = low sample).
+	measure 'Tooltip - Sample Size Note' = FORMAT([Store Count], "0") & " stores" & IF([Store Count] < 5, " - low sample, interpret with caution", "")
+		displayFolder: 12 Tooltips
+		lineageTag: 9635aaaf-1a5c-4040-a74f-df7a2fbc1c02
+
+	measure 'Title - P2 Profit by Dimension' = ```
+			
+			VAR T = VALUES('Analysis Dimension')
+			VAR D = IF(COUNTROWS(T) = 1, MAXX(T, 'Analysis Dimension'[Analysis Dimension]), "Region")
+			RETURN "Profitability by " & D & " | " & [Label - Period]
+			
+			```
+		displayFolder: 08 Titles\Visual Titles
+		lineageTag: 7ad08b66-23f0-4946-99ff-84697f6c4862
+
+	measure 'Subtitle - P2 Profit by Dimension' =
+			
+			VAR T = VALUES('Analysis Metric')
+			VAR M = IF(COUNTROWS(T) = 1, MAXX(T, 'Analysis Metric'[Analysis Metric]), "Total Net Profit")
+			RETURN "Metric: " & M & " | switch metric and dimension with the two slicers | low-sample warning below 5 stores"
+		displayFolder: 09 Subtitles\Visual Subtitles
+		lineageTag: 7a2c6b43-8173-4751-874f-3139a8802bbc
+
+	column Placeholder
+		isHidden
+		lineageTag: 7ac2c8f3-8c0d-4154-adc4-2db85a7f3490
+		isNameInferred
+		sourceColumn: [Placeholder]
+
+	partition _Measures = calculated
+		mode: import
+		source = ROW("Placeholder", BLANK())
+

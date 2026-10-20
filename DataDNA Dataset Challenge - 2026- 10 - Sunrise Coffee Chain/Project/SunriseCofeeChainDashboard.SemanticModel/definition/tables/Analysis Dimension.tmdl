@@ -1,0 +1,50 @@
+table 'Analysis Dimension'
+	lineageTag: 37aa2ff7-100f-4757-b506-32d910c4058e
+
+	column 'Analysis Dimension'
+		lineageTag: fd70c5e9-f9fc-4efd-a2f4-83f6f579c6df
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Analysis Dimension Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Analysis Dimension Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Analysis Dimension Fields'
+		isHidden
+		lineageTag: 9f135170-22b4-430c-b3b0-42084dc7452f
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Analysis Dimension Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Analysis Dimension Order'
+		isHidden
+		formatString: 0
+		lineageTag: efcc17a1-1d0a-4513-95dc-b161064b53e7
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Analysis Dimension' = calculated
+		mode: import
+		source =
+				{
+				    ("Region", NAMEOF('dim_store'[region]), 0),
+				    ("Location Type", NAMEOF('dim_store'[location_type]), 1),
+				    ("Store Format", NAMEOF('dim_store'[store_format]), 2),
+				    ("Store Status", NAMEOF('dim_store'[store_status]), 3)
+				}
+
+	annotation PBI_Id = ca94bc35f23e4646ad820df8bfb73af8
+

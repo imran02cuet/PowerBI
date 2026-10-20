@@ -1,0 +1,20 @@
+relationship AutoDetected_9ac65769-de62-41b3-8730-8569f7d8c52d
+	fromColumn: fact_daily_sales.date_id
+	toColumn: dim_date.date_id
+
+relationship AutoDetected_5325db67-73e8-48cc-942e-e4682662139f
+	fromColumn: fact_daily_sales.product_id
+	toColumn: dim_product.product_id
+
+relationship AutoDetected_5f0c42d9-3ac4-4147-977b-9f91ca685304
+	fromColumn: fact_daily_sales.store_id
+	toColumn: dim_store.store_id
+
+relationship AutoDetected_790704d3-b6d2-4bde-abec-85f8e23664d2
+	fromColumn: fact_store_monthly_profitability.date_id
+	toColumn: dim_date.date_id
+
+relationship AutoDetected_14c28f4b-0b64-4f80-a6ad-04643ec7a396
+	fromColumn: fact_store_monthly_profitability.store_id
+	toColumn: dim_store.store_id
+

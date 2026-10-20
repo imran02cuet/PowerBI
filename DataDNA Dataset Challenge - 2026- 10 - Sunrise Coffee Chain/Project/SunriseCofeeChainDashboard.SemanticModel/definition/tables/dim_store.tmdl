@@ -1,0 +1,129 @@
+table dim_store
+	lineageTag: 708ed2fe-ee7a-44b7-b6df-f3767d597255
+
+	column store_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 82996b23-e13c-424a-8b3a-c126abf31954
+		summarizeBy: none
+		sourceColumn: store_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column store_name
+		dataType: string
+		lineageTag: cbd5621c-e64c-4ccb-bca6-0f73c912f7c8
+		summarizeBy: none
+		sourceColumn: store_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column store_format
+		dataType: string
+		lineageTag: 3adbd3c4-efb1-458c-9849-d2136b44ded0
+		summarizeBy: none
+		sourceColumn: store_format
+
+		annotation SummarizationSetBy = Automatic
+
+	column location_type
+		dataType: string
+		lineageTag: 7ede774f-5d8e-4aa1-be85-84cadfa96ffa
+		summarizeBy: none
+		sourceColumn: location_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column city
+		dataType: string
+		lineageTag: 359784c6-7896-482e-86e2-498103be34ff
+		summarizeBy: none
+		sourceColumn: city
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: c2ebe8d4-cfa1-49a2-b5e7-587d581808c4
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column monthly_rent_gbp
+		dataType: double
+		lineageTag: 88401ccd-c512-4141-bf02-fc182176ebe8
+		summarizeBy: sum
+		sourceColumn: monthly_rent_gbp
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column staff_headcount
+		dataType: int64
+		formatString: 0
+		lineageTag: b19dfe5f-e33a-487d-841b-8ffabb14bf3d
+		summarizeBy: sum
+		sourceColumn: staff_headcount
+
+		annotation SummarizationSetBy = Automatic
+
+	column monthly_staffing_cost_gbp
+		dataType: double
+		lineageTag: 2a8fbe0f-6c2f-4423-b1e1-e5a387dc8229
+		summarizeBy: sum
+		sourceColumn: monthly_staffing_cost_gbp
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column loyalty_adoption_rate
+		dataType: double
+		lineageTag: 6ae79899-97cd-4574-8455-463b6095628e
+		summarizeBy: sum
+		sourceColumn: loyalty_adoption_rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column seating_capacity
+		dataType: int64
+		formatString: 0
+		lineageTag: af9f0561-87b6-4bfa-859b-fc4308b573f1
+		summarizeBy: sum
+		sourceColumn: seating_capacity
+
+		annotation SummarizationSetBy = Automatic
+
+	column opening_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 0d3d8838-808e-4f9c-9ee1-1a03842b075e
+		summarizeBy: sum
+		sourceColumn: opening_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column store_status
+		dataType: string
+		lineageTag: 60cbcf96-52c8-4be7-9372-2517f821a505
+		summarizeBy: none
+		sourceColumn: store_status
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_store = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pDataSource & "dim_store.csv"), [Delimiter = ",", Columns = 13, QuoteStyle = QuoteStyle.None]),
+				  #"Promoted headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  #"Changed column type" = Table.TransformColumnTypes(#"Promoted headers", {{"store_id", Int64.Type}, {"store_name", type text}, {"store_format", type text}, {"location_type", type text}, {"city", type text}, {"region", type text}, {"monthly_rent_gbp", type number}, {"staff_headcount", Int64.Type}, {"monthly_staffing_cost_gbp", type number}, {"loyalty_adoption_rate", type number}, {"seating_capacity", Int64.Type}, {"opening_year", Int64.Type}, {"store_status", type text}})
+				in
+				  #"Changed column type"
+
+	annotation PBI_ResultType = Table
+

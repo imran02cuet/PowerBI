@@ -1,0 +1,139 @@
+table dim_date
+	lineageTag: 64a74d9e-d440-470b-a83e-9a284fcd4eea
+	dataCategory: Time
+
+	column date_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 29ee860b-2d6e-404d-98ee-3e88a7a38865
+		summarizeBy: none
+		sourceColumn: date_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column full_date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: 022cba5f-3c26-4882-a99d-2d79a0a9c63b
+		summarizeBy: none
+		sourceColumn: full_date
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: d097511d-5a14-4278-ab87-47aa8ec201a8
+		summarizeBy: sum
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_number
+		dataType: int64
+		formatString: 0
+		lineageTag: e9e6d940-d27a-40be-9516-55b381406de3
+		summarizeBy: sum
+		sourceColumn: month_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: b591b0a3-eb38-4c66-83ee-d60a0bd80218
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: month_number
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 6c87a84d-8641-4043-b2e0-123142098304
+		summarizeBy: sum
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column week_number
+		dataType: int64
+		formatString: 0
+		lineageTag: ff73ae2f-fff7-4f1b-826e-e7d79265aef0
+		summarizeBy: sum
+		sourceColumn: week_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column day_of_week
+		dataType: string
+		lineageTag: b8e2875c-259a-4848-a335-829b297a0f25
+		summarizeBy: none
+		sourceColumn: day_of_week
+		sortByColumn: 'Day Number'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_weekend
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: fe0e0039-5924-4d32-b9b2-09bd439c2481
+		summarizeBy: none
+		sourceColumn: is_weekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_uk_bank_holiday
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 48f7e39d-1d5c-4d4b-bd39-7277e318f302
+		summarizeBy: none
+		sourceColumn: is_uk_bank_holiday
+
+		annotation SummarizationSetBy = Automatic
+
+	column uk_trading_calendar
+		dataType: string
+		lineageTag: d3b3f640-52f7-4cf6-8f0f-53fab35b8a76
+		summarizeBy: none
+		sourceColumn: uk_trading_calendar
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Day Number' = WEEKDAY(dim_date[full_date], 2)
+		formatString: 0
+		lineageTag: d86c8352-c531-4723-be47-68ff70df2d49
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Quarter Label' = "Q" & dim_date[quarter]
+		lineageTag: 110971f7-9cf7-4402-869d-47dfee304cfe
+		summarizeBy: none
+		sortByColumn: quarter
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents(pDataSource & "dim_date.csv"), [Delimiter = ",", Columns = 11, QuoteStyle = QuoteStyle.None]),
+				  #"Promoted headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  #"Changed column type" = Table.TransformColumnTypes(#"Promoted headers", {{"date_id", Int64.Type}, {"full_date", type date}, {"year", Int64.Type}, {"month_number", Int64.Type}, {"month_name", type text}, {"quarter", Int64.Type}, {"week_number", Int64.Type}, {"day_of_week", type text}, {"is_weekend", type logical}, {"is_uk_bank_holiday", type logical}, {"uk_trading_calendar", type text}})
+				in
+				  #"Changed column type"
+
+	annotation PBI_ResultType = Table
+

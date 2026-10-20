@@ -1,0 +1,9 @@
+expression pDataSource =
+		let
+		    Source = "C:\Users\shossen88\Desktop\PowerBI\DataDNA Dataset Challenge - 2026- 10 - Sunrise Coffee Chain\data\" meta [IsParameterQuery = true, IsParameterQueryRequired = false, Type = type text]
+		in
+		    Source
+	lineageTag: 5388a062-88e1-4c5a-8e7c-89a340ee1fdb
+
+	annotation PBI_ResultType = Text
+
