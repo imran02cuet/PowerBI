@@ -1,0 +1,213 @@
+﻿system_id,country_id,system_code,system_name,area_type,population_thousands,hospitals_count
+1,1,GBR-R01,United Kingdom Region 01,Metropolitan,9133,152
+2,1,GBR-R02,United Kingdom Region 02,Urban,6850,114
+3,1,GBR-R03,United Kingdom Region 03,Mixed,4567,76
+4,1,GBR-R04,United Kingdom Region 04,Rural,2283,38
+5,1,GBR-R05,United Kingdom Region 05,Metropolitan,9133,152
+6,1,GBR-R06,United Kingdom Region 06,Urban,6850,114
+7,1,GBR-R07,United Kingdom Region 07,Mixed,4567,76
+8,1,GBR-R08,United Kingdom Region 08,Rural,2283,38
+9,1,GBR-R09,United Kingdom Region 09,Metropolitan,9133,152
+10,1,GBR-R10,United Kingdom Region 10,Urban,6850,114
+11,1,GBR-R11,United Kingdom Region 11,Mixed,4567,76
+12,1,GBR-R12,United Kingdom Region 12,Rural,2283,38
+13,2,IRL-R01,Ireland Region 01,Metropolitan,1060,19
+14,2,IRL-R02,Ireland Region 02,Urban,795,14
+15,2,IRL-R03,Ireland Region 03,Mixed,530,10
+16,2,IRL-R04,Ireland Region 04,Rural,265,5
+17,2,IRL-R05,Ireland Region 05,Metropolitan,1060,19
+18,2,IRL-R06,Ireland Region 06,Urban,795,14
+19,2,IRL-R07,Ireland Region 07,Mixed,530,10
+20,2,IRL-R08,Ireland Region 08,Rural,265,5
+21,3,FRA-R01,France Region 01,Metropolitan,13680,621
+22,3,FRA-R02,France Region 02,Urban,10260,466
+23,3,FRA-R03,France Region 03,Mixed,6840,310
+24,3,FRA-R04,France Region 04,Rural,3420,155
+25,3,FRA-R05,France Region 05,Metropolitan,13680,621
+26,3,FRA-R06,France Region 06,Urban,10260,466
+27,3,FRA-R07,France Region 07,Mixed,6840,310
+28,3,FRA-R08,France Region 08,Rural,3420,155
+29,4,DEU-R01,Germany Region 01,Metropolitan,16660,533
+30,4,DEU-R02,Germany Region 02,Urban,12495,400
+31,4,DEU-R03,Germany Region 03,Mixed,8330,267
+32,4,DEU-R04,Germany Region 04,Rural,4165,133
+33,4,DEU-R05,Germany Region 05,Metropolitan,16660,533
+34,4,DEU-R06,Germany Region 06,Urban,12495,400
+35,4,DEU-R07,Germany Region 07,Mixed,8330,267
+36,4,DEU-R08,Germany Region 08,Rural,4165,133
+37,5,NLD-R01,Netherlands Region 01,Metropolitan,3580,109
+38,5,NLD-R02,Netherlands Region 02,Urban,2685,82
+39,5,NLD-R03,Netherlands Region 03,Mixed,1790,55
+40,5,NLD-R04,Netherlands Region 04,Rural,895,27
+41,5,NLD-R05,Netherlands Region 05,Metropolitan,3580,109
+42,5,NLD-R06,Netherlands Region 06,Urban,2685,82
+43,5,NLD-R07,Netherlands Region 07,Mixed,1790,55
+44,5,NLD-R08,Netherlands Region 08,Rural,895,27
+45,6,AUT-R01,Austria Region 01,Metropolitan,1820,53
+46,6,AUT-R02,Austria Region 02,Urban,1365,40
+47,6,AUT-R03,Austria Region 03,Mixed,910,27
+48,6,AUT-R04,Austria Region 04,Rural,455,13
+49,6,AUT-R05,Austria Region 05,Metropolitan,1820,53
+50,6,AUT-R06,Austria Region 06,Urban,1365,40
+51,6,AUT-R07,Austria Region 07,Mixed,910,27
+52,6,AUT-R08,Austria Region 08,Rural,455,13
+53,7,CHE-R01,Switzerland Region 01,Metropolitan,1780,63
+54,7,CHE-R02,Switzerland Region 02,Urban,1335,47
+55,7,CHE-R03,Switzerland Region 03,Mixed,890,31
+56,7,CHE-R04,Switzerland Region 04,Rural,445,16
+57,7,CHE-R05,Switzerland Region 05,Metropolitan,1780,63
+58,7,CHE-R06,Switzerland Region 06,Urban,1335,47
+59,7,CHE-R07,Switzerland Region 07,Mixed,890,31
+60,7,CHE-R08,Switzerland Region 08,Rural,445,16
+61,8,SWE-R01,Sweden Region 01,Metropolitan,2100,18
+62,8,SWE-R02,Sweden Region 02,Urban,1575,13
+63,8,SWE-R03,Sweden Region 03,Mixed,1050,9
+64,8,SWE-R04,Sweden Region 04,Rural,525,4
+65,8,SWE-R05,Sweden Region 05,Metropolitan,2100,18
+66,8,SWE-R06,Sweden Region 06,Urban,1575,13
+67,8,SWE-R07,Sweden Region 07,Mixed,1050,9
+68,8,SWE-R08,Sweden Region 08,Rural,525,4
+69,9,NOR-R01,Norway Region 01,Metropolitan,1100,19
+70,9,NOR-R02,Norway Region 02,Urban,825,14
+71,9,NOR-R03,Norway Region 03,Mixed,550,10
+72,9,NOR-R04,Norway Region 04,Rural,275,5
+73,9,NOR-R05,Norway Region 05,Metropolitan,1100,19
+74,9,NOR-R06,Norway Region 06,Urban,825,14
+75,9,NOR-R07,Norway Region 07,Mixed,550,10
+76,9,NOR-R08,Norway Region 08,Rural,275,5
+77,10,DNK-R01,Denmark Region 01,Metropolitan,1180,12
+78,10,DNK-R02,Denmark Region 02,Urban,885,9
+79,10,DNK-R03,Denmark Region 03,Mixed,590,6
+80,10,DNK-R04,Denmark Region 04,Rural,295,3
+81,10,DNK-R05,Denmark Region 05,Metropolitan,1180,12
+82,10,DNK-R06,Denmark Region 06,Urban,885,9
+83,10,DNK-R07,Denmark Region 07,Mixed,590,6
+84,10,DNK-R08,Denmark Region 08,Rural,295,3
+85,11,FIN-R01,Finland Region 01,Metropolitan,1120,47
+86,11,FIN-R02,Finland Region 02,Urban,840,36
+87,11,FIN-R03,Finland Region 03,Mixed,560,24
+88,11,FIN-R04,Finland Region 04,Rural,280,12
+89,11,FIN-R05,Finland Region 05,Metropolitan,1120,47
+90,11,FIN-R06,Finland Region 06,Urban,840,36
+91,11,FIN-R07,Finland Region 07,Mixed,560,24
+92,11,FIN-R08,Finland Region 08,Rural,280,12
+93,12,ESP-R01,Spain Region 01,Metropolitan,9680,161
+94,12,ESP-R02,Spain Region 02,Urban,7260,121
+95,12,ESP-R03,Spain Region 03,Mixed,4840,81
+96,12,ESP-R04,Spain Region 04,Rural,2420,40
+97,12,ESP-R05,Spain Region 05,Metropolitan,9680,161
+98,12,ESP-R06,Spain Region 06,Urban,7260,121
+99,12,ESP-R07,Spain Region 07,Mixed,4840,81
+100,12,ESP-R08,Spain Region 08,Rural,2420,40
+101,13,ITA-R01,Italy Region 01,Metropolitan,11800,183
+102,13,ITA-R02,Italy Region 02,Urban,8850,137
+103,13,ITA-R03,Italy Region 03,Mixed,5900,91
+104,13,ITA-R04,Italy Region 04,Rural,2950,46
+105,13,ITA-R05,Italy Region 05,Metropolitan,11800,183
+106,13,ITA-R06,Italy Region 06,Urban,8850,137
+107,13,ITA-R07,Italy Region 07,Mixed,5900,91
+108,13,ITA-R08,Italy Region 08,Rural,2950,46
+109,14,USA-R01,United States Region 01,Metropolitan,44907,868
+110,14,USA-R02,United States Region 02,Urban,33680,651
+111,14,USA-R03,United States Region 03,Mixed,22453,434
+112,14,USA-R04,United States Region 04,Rural,11227,217
+113,14,USA-R05,United States Region 05,Metropolitan,44907,868
+114,14,USA-R06,United States Region 06,Urban,33680,651
+115,14,USA-R07,United States Region 07,Mixed,22453,434
+116,14,USA-R08,United States Region 08,Rural,11227,217
+117,14,USA-R09,United States Region 09,Metropolitan,44907,868
+118,14,USA-R10,United States Region 10,Urban,33680,651
+119,14,USA-R11,United States Region 11,Mixed,22453,434
+120,14,USA-R12,United States Region 12,Rural,11227,217
+121,15,CAN-R01,Canada Region 01,Metropolitan,8000,133
+122,15,CAN-R02,Canada Region 02,Urban,6000,100
+123,15,CAN-R03,Canada Region 03,Mixed,4000,67
+124,15,CAN-R04,Canada Region 04,Rural,2000,33
+125,15,CAN-R05,Canada Region 05,Metropolitan,8000,133
+126,15,CAN-R06,Canada Region 06,Urban,6000,100
+127,15,CAN-R07,Canada Region 07,Mixed,4000,67
+128,15,CAN-R08,Canada Region 08,Rural,2000,33
+129,16,AUS-R01,Australia Region 01,Metropolitan,5340,271
+130,16,AUS-R02,Australia Region 02,Urban,4005,203
+131,16,AUS-R03,Australia Region 03,Mixed,2670,135
+132,16,AUS-R04,Australia Region 04,Rural,1335,68
+133,16,AUS-R05,Australia Region 05,Metropolitan,5340,271
+134,16,AUS-R06,Australia Region 06,Urban,4005,203
+135,16,AUS-R07,Australia Region 07,Mixed,2670,135
+136,16,AUS-R08,Australia Region 08,Rural,1335,68
+137,17,NZL-R01,New Zealand Region 01,Metropolitan,1040,32
+138,17,NZL-R02,New Zealand Region 02,Urban,780,24
+139,17,NZL-R03,New Zealand Region 03,Mixed,520,16
+140,17,NZL-R04,New Zealand Region 04,Rural,260,8
+141,17,NZL-R05,New Zealand Region 05,Metropolitan,1040,32
+142,17,NZL-R06,New Zealand Region 06,Urban,780,24
+143,17,NZL-R07,New Zealand Region 07,Mixed,520,16
+144,17,NZL-R08,New Zealand Region 08,Rural,260,8
+145,18,JPN-R01,Japan Region 01,Metropolitan,24900,1704
+146,18,JPN-R02,Japan Region 02,Urban,18675,1278
+147,18,JPN-R03,Japan Region 03,Mixed,12450,852
+148,18,JPN-R04,Japan Region 04,Rural,6225,426
+149,18,JPN-R05,Japan Region 05,Metropolitan,24900,1704
+150,18,JPN-R06,Japan Region 06,Urban,18675,1278
+151,18,JPN-R07,Japan Region 07,Mixed,12450,852
+152,18,JPN-R08,Japan Region 08,Rural,6225,426
+153,19,KOR-R01,South Korea Region 01,Metropolitan,10340,754
+154,19,KOR-R02,South Korea Region 02,Urban,7755,566
+155,19,KOR-R03,South Korea Region 03,Mixed,5170,377
+156,19,KOR-R04,South Korea Region 04,Rural,2585,189
+157,19,KOR-R05,South Korea Region 05,Metropolitan,10340,754
+158,19,KOR-R06,South Korea Region 06,Urban,7755,566
+159,19,KOR-R07,South Korea Region 07,Mixed,5170,377
+160,19,KOR-R08,South Korea Region 08,Rural,2585,189
+161,20,BRA-R01,Brazil Region 01,Metropolitan,84440,2533
+162,20,BRA-R02,Brazil Region 02,Urban,63330,1900
+163,20,BRA-R03,Brazil Region 03,Mixed,42220,1267
+164,20,BRA-R04,Brazil Region 04,Rural,21110,633
+165,21,MEX-R01,Mexico Region 01,Metropolitan,51880,1853
+166,21,MEX-R02,Mexico Region 02,Urban,38910,1390
+167,21,MEX-R03,Mexico Region 03,Mixed,25940,926
+168,21,MEX-R04,Mexico Region 04,Rural,12970,463
+169,22,TUR-R01,Türkiye Region 01,Metropolitan,34120,597
+170,22,TUR-R02,Türkiye Region 02,Urban,25590,448
+171,22,TUR-R03,Türkiye Region 03,Mixed,17060,299
+172,22,TUR-R04,Türkiye Region 04,Rural,8530,149
+173,23,CHN-R01,China Region 01,Metropolitan,564280,13480
+174,23,CHN-R02,China Region 02,Urban,423210,10110
+175,23,CHN-R03,China Region 03,Mixed,282140,6740
+176,23,CHN-R04,China Region 04,Rural,141070,3370
+177,24,ZAF-R01,South Africa Region 01,Metropolitan,25280,485
+178,24,ZAF-R02,South Africa Region 02,Urban,18960,363
+179,24,ZAF-R03,South Africa Region 03,Mixed,12640,242
+180,24,ZAF-R04,South Africa Region 04,Rural,6320,121
+181,25,IND-R01,India Region 01,Metropolitan,575240,26297
+182,25,IND-R02,India Region 02,Urban,431430,19723
+183,25,IND-R03,India Region 03,Mixed,287620,13148
+184,25,IND-R04,India Region 04,Rural,143810,6574
+185,26,NGA-R01,Nigeria Region 01,Metropolitan,91160,1140
+186,26,NGA-R02,Nigeria Region 02,Urban,68370,855
+187,26,NGA-R03,Nigeria Region 03,Mixed,45580,570
+188,26,NGA-R04,Nigeria Region 04,Rural,22790,285
+189,27,KEN-R01,Kenya Region 01,Metropolitan,22120,619
+190,27,KEN-R02,Kenya Region 02,Urban,16590,465
+191,27,KEN-R03,Kenya Region 03,Mixed,11060,310
+192,27,KEN-R04,Kenya Region 04,Rural,5530,155
+193,28,EGY-R01,Egypt Region 01,Metropolitan,45800,458
+194,28,EGY-R02,Egypt Region 02,Urban,34350,344
+195,28,EGY-R03,Egypt Region 03,Mixed,22900,229
+196,28,EGY-R04,Egypt Region 04,Rural,11450,114
+197,29,ETH-R01,Ethiopia Region 01,Metropolitan,51480,193
+198,29,ETH-R02,Ethiopia Region 02,Urban,38610,145
+199,29,ETH-R03,Ethiopia Region 03,Mixed,25740,97
+200,29,ETH-R04,Ethiopia Region 04,Rural,12870,48
+201,30,UGA-R01,Uganda Region 01,Metropolitan,19480,162
+202,30,UGA-R02,Uganda Region 02,Urban,14610,122
+203,30,UGA-R03,Uganda Region 03,Mixed,9740,81
+204,30,UGA-R04,Uganda Region 04,Rural,4870,41
+205,31,MWI-R01,Malawi Region 01,Metropolitan,8440,110
+206,31,MWI-R02,Malawi Region 02,Urban,6330,82
+207,31,MWI-R03,Malawi Region 03,Mixed,4220,55
+208,31,MWI-R04,Malawi Region 04,Rural,2110,27
+209,32,RWA-R01,Rwanda Region 01,Metropolitan,5600,22
+210,32,RWA-R02,Rwanda Region 02,Urban,4200,16
+211,32,RWA-R03,Rwanda Region 03,Mixed,2800,11
+212,32,RWA-R04,Rwanda Region 04,Rural,1400,5

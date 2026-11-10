@@ -1,0 +1,44 @@
+{
+  "name": "HealthSystems",
+  "dataColors": ["#1F4E79", "#9AA5B1", "#C0392B", "#2A9D8F", "#E9A23B", "#B8C4D6", "#5C6B80", "#7FA7B5"],
+  "background": "#FFFFFF",
+  "foreground": "#1B2A41",
+  "tableAccent": "#1F4E79",
+  "good": "#2A9D8F",
+  "neutral": "#E9A23B",
+  "bad": "#C0392B",
+  "maximum": "#C0392B",
+  "center": "#E9A23B",
+  "minimum": "#2A9D8F",
+  "firstLevelElements": "#1B2A41",
+  "secondLevelElements": "#5C6B80",
+  "thirdLevelElements": "#B8C4D6",
+  "fourthLevelElements": "#E3E7ED",
+  "secondaryBackground": "#F7F8FA",
+  "textClasses": {
+    "callout": { "fontSize": 28, "fontFace": "Segoe UI Semibold", "color": "#1B2A41" },
+    "title": { "fontSize": 12, "fontFace": "Segoe UI Semibold", "color": "#1B2A41" },
+    "header": { "fontSize": 12, "fontFace": "Segoe UI Semibold", "color": "#1B2A41" },
+    "label": { "fontSize": 9, "fontFace": "Segoe UI", "color": "#5C6B80" }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [
+          {
+            "show": true,
+            "fontColor": { "solid": { "color": "#1B2A41" } },
+            "fontSize": 12,
+            "fontFamily": "Segoe UI Semibold"
+          }
+        ],
+        "background": [
+          { "show": true, "color": { "solid": { "color": "#FFFFFF" } }, "transparency": 0 }
+        ],
+        "border": [
+          { "show": true, "color": { "solid": { "color": "#E3E7ED" } }, "radius": 8 }
+        ]
+      }
+    }
+  }
+}

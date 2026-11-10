@@ -1,0 +1,68 @@
+Please now review the entire model and add the table and column documentation based on DATA_DICTIONARY.md.
+Fix the model relations if needed. 
+
+
+/powerbi-challenge
+Based on CHALLENGE_BRIEF.md Now please create the DAX that needed under Measures model and folder 
+and subfolder wise based on the merging requrements also:
+
+What You Will Analyse
+The pandemic shock in acute care: ICU occupancy, emergency department 4-hour performance and recorded respiratory illness across the scenario’s pandemic phases, and how the change differs by country.
+The elective backlog and who recovered: elective waiting times in 2019 and 2021, overall and country by country. In this scenario you also follow waits in Sweden, Norway, Denmark, Finland and Germany after 2021, and compare the United Kingdom with its own 2019 level and with the EU member countries.
+Health spending: in this scenario, health spending per person in the United Kingdom compared with the EU member countries.
+The workforce under strain: the staff burnout index year by year, the link between burnout and vacancy rates, and, in this scenario, how vacancy rates and burnout in the United Kingdom compare with other countries.
+Long-running disease trends: recorded cardiovascular disease and diabetes in each WHO region, and, in this scenario, recorded cancer incidence in high-income and low-income countries.
+
+Please suggested the page for the anaysis as an interview and design  , but maintain all Page title, Charts title, subtitle, BF, CF,  Card with graph and comparison.. 
+Make sure the design of each page is clean and easy to understand the data insight and story teller, not too many charts and clumsy .
+Also don't create any measures that not needed for the dashboard and report or anything. Design of the dashboard and page must be top class, when design keep in mind the following is How they score our work:
+
+
+Please add this short footer to your charts: Synthetic data, DataDNA November 2026 challenge.
+
+
+
+
+
+
+
+
+$folder = "$env:USERPROFILE\Microsoft\Power BI Desktop Store App\AnalysisServicesWorkspaces"
+
+Get-ChildItem $folder -Filter "msmdsrv.port.txt" -Recurse -ErrorAction SilentlyContinue |
+ForEach-Object {
+    Write-Host "Port file:" $_.FullName
+    Write-Host "Port number:" (Get-Content $_.FullName -Raw).Trim()
+}
+
+
+
+
+
+
+
+I have diagnosed an issue with Power BI Desktop automatic instance discovery.
+
+My Power BI Analysis Services instance is running with these details:
+
+Process ID: 156
+Port: 59350
+Server: localhost:59350
+
+Windows Update KB5127936 has caused an abnormal TCP socket state (0 instead of LISTEN state 2). Therefore, the ListLocalInstances operation cannot discover the running Power BI instance.
+
+Please do the following:
+
+Inspect the available Power BI Modeling MCP tools and their connection-operation parameters.
+
+Do not call ListLocalInstances.
+
+Use the Connect operation directly with:
+DataSource: localhost:59350
+
+If the tool supports a connection string, use:
+Provider=MSOLAP;Data Source=localhost:59350
+
+Verify that the semantic model connects successfully.
+
+List the model tables, measures and relationships.

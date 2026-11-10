@@ -1,0 +1,33 @@
+﻿country_id,iso3,country_name,who_region,income_group,is_oecd_member,is_eu_member,healthcare_model,population_millions
+1,GBR,United Kingdom,European Region,High income,TRUE,FALSE,Beveridge,68.5
+2,IRL,Ireland,European Region,High income,TRUE,TRUE,Beveridge,5.3
+3,FRA,France,European Region,High income,TRUE,TRUE,Bismarck,68.4
+4,DEU,Germany,European Region,High income,TRUE,TRUE,Bismarck,83.3
+5,NLD,Netherlands,European Region,High income,TRUE,TRUE,Bismarck,17.9
+6,AUT,Austria,European Region,High income,TRUE,TRUE,Bismarck,9.1
+7,CHE,Switzerland,European Region,High income,TRUE,FALSE,Bismarck,8.9
+8,SWE,Sweden,European Region,High income,TRUE,TRUE,Beveridge,10.5
+9,NOR,Norway,European Region,High income,TRUE,FALSE,Beveridge,5.5
+10,DNK,Denmark,European Region,High income,TRUE,TRUE,Beveridge,5.9
+11,FIN,Finland,European Region,High income,TRUE,TRUE,Beveridge,5.6
+12,ESP,Spain,European Region,High income,TRUE,TRUE,Beveridge,48.4
+13,ITA,Italy,European Region,High income,TRUE,TRUE,Beveridge,59.0
+14,USA,United States,Region of the Americas,High income,TRUE,FALSE,Private Insurance Led,336.8
+15,CAN,Canada,Region of the Americas,High income,TRUE,FALSE,National Health Insurance,40.0
+16,AUS,Australia,Western Pacific Region,High income,TRUE,FALSE,National Health Insurance,26.7
+17,NZL,New Zealand,Western Pacific Region,High income,TRUE,FALSE,Beveridge,5.2
+18,JPN,Japan,Western Pacific Region,High income,TRUE,FALSE,Bismarck,124.5
+19,KOR,South Korea,Western Pacific Region,High income,TRUE,FALSE,National Health Insurance,51.7
+20,BRA,Brazil,Region of the Americas,Upper middle income,FALSE,FALSE,Beveridge,211.1
+21,MEX,Mexico,Region of the Americas,Upper middle income,TRUE,FALSE,Bismarck,129.7
+22,TUR,Türkiye,European Region,Upper middle income,TRUE,FALSE,Bismarck,85.3
+23,CHN,China,Western Pacific Region,Upper middle income,FALSE,FALSE,National Health Insurance,1410.7
+24,ZAF,South Africa,African Region,Upper middle income,FALSE,FALSE,Beveridge,63.2
+25,IND,India,South-East Asia Region,Lower middle income,FALSE,FALSE,Out-of-Pocket Led,1438.1
+26,NGA,Nigeria,African Region,Lower middle income,FALSE,FALSE,Out-of-Pocket Led,227.9
+27,KEN,Kenya,African Region,Lower middle income,FALSE,FALSE,National Health Insurance,55.3
+28,EGY,Egypt,Eastern Mediterranean Region,Lower middle income,FALSE,FALSE,Out-of-Pocket Led,114.5
+29,ETH,Ethiopia,African Region,Low income,FALSE,FALSE,Out-of-Pocket Led,128.7
+30,UGA,Uganda,African Region,Low income,FALSE,FALSE,Out-of-Pocket Led,48.7
+31,MWI,Malawi,African Region,Low income,FALSE,FALSE,Beveridge,21.1
+32,RWA,Rwanda,African Region,Low income,FALSE,FALSE,National Health Insurance,14.0
